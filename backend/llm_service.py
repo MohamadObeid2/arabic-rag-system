@@ -7,7 +7,7 @@ class LLMService:
         self.model = None
         self.current_model = None
     
-    def load_model(self, model_name: str = "gpt2"):
+    def load_model(self, model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"):
         if self.current_model == model_name and self.model:
             return
         
@@ -24,7 +24,7 @@ class LLMService:
             self.model = None
             self.current_model = None
     
-    def generate_response(self, prompt: str, model_name: str = "gpt2"):
+    def generate_response(self, prompt: str, model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"):
         if not self.model or self.current_model != model_name:
             self.load_model(model_name)
         

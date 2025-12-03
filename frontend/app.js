@@ -201,7 +201,7 @@ document.getElementById('config-form').addEventListener('submit', async function
     
     const config = {
         embedding_model: document.getElementById('embedding-model').value || 'all-MiniLM-L6-v2',
-        llm_model: document.getElementById('llm-model').value || 'gpt2',
+        llm_model: document.getElementById('llm-model').value || 'TinyLlama/TinyLlama-1.1B-Chat-v1.0',
         chunk_size: parseInt(document.getElementById('chunk-size').value) || 500,
         chunk_overlap: parseInt(document.getElementById('chunk-overlap').value) || 50,
         top_k: parseInt(document.getElementById('top-k').value) || 5,
@@ -256,7 +256,7 @@ async function loadConfig() {
         const config = await response.json();
         
         document.getElementById('embedding-model').value = config.embedding_model || 'all-MiniLM-L6-v2';
-        document.getElementById('llm-model').value = config.llm_model || 'gpt2';
+        document.getElementById('llm-model').value = config.llm_model || 'TinyLlama/TinyLlama-1.1B-Chat-v1.0';
         document.getElementById('chunk-size').value = config.chunk_size || 500;
         document.getElementById('chunk-overlap').value = config.chunk_overlap || 50;
         document.getElementById('top-k').value = config.top_k || 5;

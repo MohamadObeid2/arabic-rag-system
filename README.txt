@@ -1,4 +1,4 @@
-Arabic RAG System - Offline
+Arabic RAG System
 
 A simple Arabic Retrieval-Augmented Generation system that runs completely offline.
 
