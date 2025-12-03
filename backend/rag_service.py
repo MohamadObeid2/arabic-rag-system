@@ -1,7 +1,7 @@
 from .chunking_service import ChunkingService
 from .embedding_service import EmbeddingService
 from .vector_store import VectorStore
-from .prompt_service import PromptService
+from .prompt_utils import PromptUtils
 from .llm_service import LLMService
 
 class RAGService:
@@ -10,7 +10,7 @@ class RAGService:
         self.embedding_service = EmbeddingService()
         self.vector_store = VectorStore()
         self.llm_service = LLMService()
-        self.prompt_service = PromptService()
+        self.prompt_utils = PromptUtils()
     
     def set_mongo_service(self, mongo_service):
         self.chunking_service.set_mongo_service(mongo_service)
@@ -87,7 +87,7 @@ class RAGService:
         vector_ids = [r["vector_id"] for r in results]
         chunks = self.chunking_service.mongo_service.get_chunks_by_vector_ids(vector_ids)
         
-        prompt = self.prompt_service.create_prompt(question, chunks)
+        prompt = self.prompt_utils.create_prompt(question, chunks)
         answer = self.llm_service.generate_response(prompt, config["llm_model"])
         
         sources = []

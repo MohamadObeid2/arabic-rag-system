@@ -2,7 +2,7 @@ from pymongo import MongoClient
 import os
 from datetime import datetime
 
-class MongoService:
+class MongoClient:
     def __init__(self):
         mongodb_uri = os.getenv("MONGODB_URI", "mongodb://admin:password@localhost:27017")
         self.client = MongoClient(mongodb_uri)

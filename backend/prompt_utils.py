@@ -1,4 +1,4 @@
-class PromptService:
+class PromptUtils:
     def create_prompt(self, question: str, context: list[dict]):
         if not context:
             return f"السؤال: {question}\n\nالإجابة:"

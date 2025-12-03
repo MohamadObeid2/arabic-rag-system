@@ -9,23 +9,23 @@ app = FastAPI()
 
 from .models import ChatRequest, SystemConfig
 from .rag_service import RAGService
-from .mongo_service import MongoService
+from .mongo_client import MongoClient
 
 rag_service = None
-mongo_service = None
+mongo_client = None
 
-def get_mongo_service():
-    global mongo_service
-    if mongo_service is None:
-        mongo_service = MongoService()
-        mongo_service.init_databases()
-    return mongo_service
+def get_mongo_client():
+    global mongo_client
+    if mongo_client is None:
+        mongo_client = MongoClient()
+        mongo_client.init_databases()
+    return mongo_client
 
 def get_rag_service():
     global rag_service
     if rag_service is None:
         rag_service = RAGService()
-        rag_service.set_mongo_service(get_mongo_service())
+        rag_service.set_mongo_client(get_mongo_client())
     return rag_service
 
 @app.get("/")
@@ -39,7 +39,7 @@ async def get_frontend():
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    mongo = get_mongo_service()
+    mongo = get_mongo_client()
     config_data = mongo.get_config()
     rag = get_rag_service()
     
@@ -79,7 +79,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
         if not uploaded_files:
             raise HTTPException(status_code=400, detail="لم يتم العثور على ملفات نصية")
         
-        mongo = get_mongo_service()
+        mongo = get_mongo_client()
         config_data = mongo.get_config()
         rag = get_rag_service()
         
@@ -99,7 +99,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
 
 @app.get("/api/system")
 async def get_system_config():
-    mongo = get_mongo_service()
+    mongo = get_mongo_client()
     config = mongo.get_config()
     if config:
         config.pop('_id', None)
@@ -109,7 +109,7 @@ async def get_system_config():
 @app.post("/api/system")
 async def update_system_config(config: SystemConfig):
     try:
-        mongo = get_mongo_service()
+        mongo = get_mongo_client()
         config_dict = config.dict()
         mongo.update_config(config_dict)
         
@@ -123,7 +123,7 @@ async def update_system_config(config: SystemConfig):
 
 @app.get("/api/search")
 async def search_documents(query: str, top_k: int = 5):
-    mongo = get_mongo_service()
+    mongo = get_mongo_client()
     config_data = mongo.get_config()
     rag = get_rag_service()
     
