@@ -23,7 +23,7 @@ echo "4. Installing requirements..."
 pip install -r requirements.txt
 
 echo "5. Starting Docker containers..."
-docker-compose up -d
+docker compose up -d
 
 echo "6. Waiting for services to start..."
 sleep 10
