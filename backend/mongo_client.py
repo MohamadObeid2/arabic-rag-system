@@ -1,11 +1,11 @@
-from pymongo import MongoClient
+from pymongo import MongoClient as MongoClient_
 import os
 from datetime import datetime
 
 class MongoClient:
     def __init__(self):
         mongodb_uri = os.getenv("MONGODB_URI", "mongodb://admin:password@localhost:27017")
-        self.client = MongoClient(mongodb_uri)
+        self.client = MongoClient_(mongodb_uri)
         self.db = self.client.arabic_rag
         self.chunks_collection = self.db.chunks
         self.config_collection = self.db.system_config
@@ -18,12 +18,12 @@ class MongoClient:
             self.db.create_collection("system_config")
         
         default_config = {
-            "chunk_size": 500,
-            "chunk_overlap": 50,
-            "top_k": 5,
-            "similarity_threshold": 0.3,
-            "embedding_model": "all-MiniLM-L6-v2",
-            "llm_model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+            "chunk_size": int(os.getenv("CHUNK_SIZE", "500")),
+            "chunk_overlap": int(os.getenv("CHUNK_OVERLAP", "50")),
+            "top_k": int(os.getenv("TOP_K", "3")),
+            "similarity_threshold": float(os.getenv("SIMILARITY_THRESHOLD", "0.5")),
+            "embedding_model": os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
+            "llm_model": os.getenv("LLM_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
         }
         
         self.config_collection.update_one(

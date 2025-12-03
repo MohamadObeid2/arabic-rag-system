@@ -3,10 +3,10 @@ from typing import List, Dict
 
 class ChunkingService:
     def __init__(self):
-        self.mongo_service = None
+        self.mongo_client = None
     
-    def set_mongo_service(self, mongo_service):
-        self.mongo_service = mongo_service
+    def set_mongo_client(self, mongo_client):
+        self.mongo_client = mongo_client
     
     def load_text_files(self, folder_path: str) -> List[Dict]:
         documents = []
@@ -83,6 +83,6 @@ class ChunkingService:
         return chunks
     
     def store_chunks(self, chunks):
-        if not self.mongo_service:
+        if not self.mongo_client:
             return []
-        return self.mongo_service.store_chunks(chunks)
+        return self.mongo_client.store_chunks(chunks)

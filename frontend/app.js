@@ -1,16 +1,92 @@
 let currentSection = 'chat';
+let chatMessages = [];
 
 function showSection(section) {
     document.querySelectorAll('.section').forEach(div => {
-        div.style.display = 'none';
+        div.classList.remove('active');
     });
     
-    document.getElementById(section + '-section').style.display = 'block';
+    document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    document.getElementById(section + '-section').classList.add('active');
+    document.querySelector(`nav button[onclick="showSection('${section}')"]`).classList.add('active');
     currentSection = section;
+}
+
+function formatTime() {
+    const now = new Date();
+    return now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+}
+
+function addMessage(role, content, sources = []) {
+    const chatBox = document.getElementById('chat-box');
+    
+    if (chatMessages.length === 0) {
+        chatBox.innerHTML = '';
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role}-message`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.textContent = content;
+    bubble.appendChild(contentDiv);
+    
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'message-time';
+    timeDiv.textContent = formatTime();
+    bubble.appendChild(timeDiv);
+    
+    messageDiv.appendChild(bubble);
+    
+    if (sources.length > 0) {
+        const sourcesContainer = document.createElement('div');
+        sourcesContainer.className = 'sources-container';
+        
+        const title = document.createElement('div');
+        title.className = 'sources-title';
+        title.innerHTML = '📚 المصادر المستخدمة';
+        sourcesContainer.appendChild(title);
+        
+        sources.forEach(source => {
+            const sourceItem = document.createElement('div');
+            sourceItem.className = 'source-item';
+            
+            const fileInfo = document.createElement('div');
+            fileInfo.className = 'source-file';
+            fileInfo.innerHTML = `📄 ${source.file}`;
+            sourceItem.appendChild(fileInfo);
+            
+            const content = document.createElement('div');
+            content.className = 'source-content';
+            content.textContent = source.content;
+            sourceItem.appendChild(content);
+            
+            const score = document.createElement('div');
+            score.className = 'source-score';
+            score.textContent = `التشابه: ${source.score.toFixed(3)}`;
+            sourceItem.appendChild(score);
+            
+            sourcesContainer.appendChild(sourceItem);
+        });
+        
+        messageDiv.appendChild(sourcesContainer);
+    }
+    
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    
+    chatMessages.push({ role, content, sources });
 }
 
 async function sendMessage() {
     const input = document.getElementById('user-input');
+    const button = document.getElementById('send-button');
     const message = input.value.trim();
     
     if (!message) {
@@ -18,21 +94,11 @@ async function sendMessage() {
         return;
     }
     
-    const chatBox = document.getElementById('chat-box');
+    input.disabled = true;
+    button.disabled = true;
+    button.innerHTML = '<span>جاري المعالجة...</span><div class="loading"></div>';
     
-    const userMessage = document.createElement('div');
-    userMessage.className = 'message user-message';
-    userMessage.textContent = message;
-    chatBox.appendChild(userMessage);
-    
-    input.value = '';
-    
-    const loading = document.createElement('div');
-    loading.className = 'message system-message';
-    loading.textContent = 'جاري البحث عن إجابة...';
-    loading.id = 'loading-message';
-    chatBox.appendChild(loading);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    addMessage('user', message);
     
     try {
         const response = await fetch('/api/chat', {
@@ -43,63 +109,18 @@ async function sendMessage() {
             body: JSON.stringify({ question: message })
         });
         
-        chatBox.removeChild(loading);
-        
         const data = await response.json();
-        
-        const systemMessage = document.createElement('div');
-        systemMessage.className = 'message system-message';
-        
-        const answer = document.createElement('div');
-        answer.textContent = data.answer;
-        systemMessage.appendChild(answer);
-        
-        if (data.sources && data.sources.length > 0) {
-            const sourcesContainer = document.createElement('div');
-            sourcesContainer.className = 'sources-container';
-            
-            const sourcesTitle = document.createElement('div');
-            sourcesTitle.className = 'sources-title';
-            sourcesTitle.innerHTML = '📚 المصادر المستخدمة:';
-            sourcesContainer.appendChild(sourcesTitle);
-            
-            data.sources.forEach((source, index) => {
-                const sourceItem = document.createElement('div');
-                sourceItem.className = 'source-item';
-                
-                const fileInfo = document.createElement('div');
-                fileInfo.className = 'source-file';
-                fileInfo.innerHTML = `📄 ${source.file}`;
-                sourceItem.appendChild(fileInfo);
-                
-                const content = document.createElement('div');
-                content.className = 'source-content';
-                content.textContent = source.content;
-                sourceItem.appendChild(content);
-                
-                const score = document.createElement('div');
-                score.className = 'source-score';
-                score.textContent = `تشابه: ${source.score.toFixed(3)}`;
-                sourceItem.appendChild(score);
-                
-                sourcesContainer.appendChild(sourceItem);
-            });
-            
-            systemMessage.appendChild(sourcesContainer);
-        }
-        
-        chatBox.appendChild(systemMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        addMessage('system', data.answer, data.sources);
         
     } catch (error) {
-        chatBox.removeChild(loading);
-        
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'message system-message';
-        errorMessage.textContent = '❌ حدث خطأ في الاتصال بالخادم';
-        chatBox.appendChild(errorMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        addMessage('system', '❌ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
     }
+    
+    input.value = '';
+    input.disabled = false;
+    button.disabled = false;
+    button.innerHTML = '<span>إرسال</span><span>↩️</span>';
+    input.focus();
 }
 
 async function performSearch() {
@@ -111,7 +132,7 @@ async function performSearch() {
     }
     
     const resultsDiv = document.getElementById('search-results');
-    resultsDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">جاري البحث...</div>';
+    resultsDiv.innerHTML = '<div class="empty-state"><div class="loading"></div><h3>جاري البحث...</h3></div>';
     
     try {
         const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&top_k=10`);
@@ -120,52 +141,95 @@ async function performSearch() {
         resultsDiv.innerHTML = '';
         
         if (data.success && data.results.length > 0) {
+            const count = document.createElement('div');
+            count.className = 'results-count';
+            count.textContent = `تم العثور على ${data.results.length} نتيجة`;
+            resultsDiv.appendChild(count);
+            
             data.results.forEach((result, index) => {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item';
                 
+                const header = document.createElement('div');
+                header.className = 'result-header';
+                
+                const id = document.createElement('div');
+                id.className = 'result-id';
+                id.textContent = `نتيجة ${index + 1}`;
+                
                 const score = document.createElement('div');
                 score.className = 'result-score';
-                score.textContent = `نتيجة ${index + 1} - تشابه: ${result.score.toFixed(3)}`;
-                resultItem.appendChild(score);
+                score.textContent = `التشابه: ${result.score.toFixed(3)}`;
                 
-                const idInfo = document.createElement('div');
-                idInfo.style.marginBottom = '10px';
-                idInfo.style.color = '#666';
-                idInfo.style.fontSize = '14px';
-                idInfo.innerHTML = `المعرف: ${result.chunk_id}`;
-                resultItem.appendChild(idInfo);
+                header.appendChild(id);
+                header.appendChild(score);
+                resultItem.appendChild(header);
+                
+                const chunkId = document.createElement('div');
+                chunkId.style.fontSize = '0.875rem';
+                chunkId.style.color = 'var(--text-secondary)';
+                chunkId.style.marginBottom = 'var(--spacing-md)';
+                chunkId.textContent = `المعرف: ${result.chunk_id}`;
+                resultItem.appendChild(chunkId);
                 
                 resultsDiv.appendChild(resultItem);
             });
         } else {
-            resultsDiv.innerHTML = '<div style="text-align: center; padding: 30px; color: #666;">لم يتم العثور على نتائج</div>';
+            resultsDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><h3>لم يتم العثور على نتائج</h3><p>حاول استخدام كلمات بحث مختلفة</p></div>';
         }
         
     } catch (error) {
-        resultsDiv.innerHTML = '<div style="text-align: center; padding: 30px; color: #f44336;">❌ خطأ في الاتصال بالخادم</div>';
+        resultsDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><h3>حدث خطأ في الاتصال</h3><p>يرجى المحاولة مرة أخرى</p></div>';
     }
 }
 
-document.getElementById('folder-input').addEventListener('change', async function(e) {
-    const files = Array.from(e.target.files);
-    const txtFiles = files.filter(f => f.name.toLowerCase().endsWith('.txt'));
+function setupDragAndDrop() {
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('folder-input');
+    
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.classList.add('drag-over');
+    });
+    
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.classList.remove('drag-over');
+    });
+    
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('drag-over');
+        
+        if (e.dataTransfer.files.length > 0) {
+            handleFileUpload(Array.from(e.dataTransfer.files));
+        }
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileUpload(Array.from(e.target.files));
+        }
+    });
+}
+
+async function handleFileUpload(files) {
+    const txtFiles = files.filter(f => f.webkitRelativePath && f.name.toLowerCase().endsWith('.txt'));
     
     if (txtFiles.length === 0) {
-        alert('لم يتم العثور على ملفات نصية');
+        showStatus('لم يتم العثور على ملفات نصية (.txt) في المجلد', 'error');
         return;
     }
     
     const statusDiv = document.getElementById('upload-status');
-    const filesDiv = document.getElementById('uploaded-files');
+    const filesList = document.getElementById('uploaded-files-list');
     
-    statusDiv.innerHTML = `📤 جاري رفع ${txtFiles.length} ملف...`;
-    statusDiv.className = '';
-    filesDiv.innerHTML = '';
+    showStatus(`📤 جاري رفع ${txtFiles.length} ملف من المجلد...`, 'info');
+    filesList.innerHTML = '';
     
     const formData = new FormData();
     txtFiles.forEach(file => {
-        formData.append('files', file);
+        const relativePath = file.webkitRelativePath || file.name;
+        formData.append('files', file, relativePath);
     });
     
     try {
@@ -177,24 +241,46 @@ document.getElementById('folder-input').addEventListener('change', async functio
         const result = await response.json();
         
         if (result.success) {
-            statusDiv.innerHTML = `✅ ${result.message}`;
-            statusDiv.className = 'success';
+            showStatus(`✅ ${result.message}`, 'success');
             
             result.files.forEach(file => {
-                const fileDiv = document.createElement('div');
-                fileDiv.className = 'file-item';
-                fileDiv.innerHTML = `📄 ${file.filename}`;
-                filesDiv.appendChild(fileDiv);
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">📄</div>
+                        <div class="file-details">
+                            <div class="file-name">${file.filename}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <div class="file-status success">تم الرفع</div>
+                `;
+                
+                filesList.appendChild(fileItem);
             });
         } else {
-            statusDiv.innerHTML = `❌ ${result.message || 'حدث خطأ'}`;
-            statusDiv.className = 'error';
+            showStatus(`❌ ${result.message || 'حدث خطأ'}`, 'error');
         }
     } catch (error) {
-        statusDiv.innerHTML = '❌ خطأ في الاتصال بالخادم';
-        statusDiv.className = 'error';
+        showStatus('❌ خطأ في الاتصال بالخادم', 'error');
     }
-});
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 بايت';
+    const k = 1024;
+    const sizes = ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('upload-status');
+    statusDiv.className = `status-message ${type}`;
+    statusDiv.textContent = message;
+}
 
 document.getElementById('config-form').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -209,8 +295,8 @@ document.getElementById('config-form').addEventListener('submit', async function
     };
     
     const statusDiv = document.getElementById('config-status');
-    statusDiv.innerHTML = '⏳ جاري حفظ الإعدادات وإعادة تحميل النماذج...';
-    statusDiv.className = '';
+    statusDiv.className = 'status-message info';
+    statusDiv.textContent = '⏳ جاري حفظ الإعدادات...';
     
     try {
         const response = await fetch('/api/system', {
@@ -224,17 +310,30 @@ document.getElementById('config-form').addEventListener('submit', async function
         const result = await response.json();
         
         if (result.success) {
-            statusDiv.innerHTML = '✅ تم حفظ الإعدادات بنجاح';
-            statusDiv.className = 'success';
+            statusDiv.className = 'status-message success';
+            statusDiv.textContent = '✅ تم حفظ الإعدادات بنجاح';
         } else {
-            statusDiv.innerHTML = `❌ ${result.message || 'فشل الحفظ'}`;
-            statusDiv.className = 'error';
+            statusDiv.className = 'status-message error';
+            statusDiv.textContent = `❌ ${result.message || 'فشل الحفظ'}`;
         }
     } catch (error) {
-        statusDiv.innerHTML = '❌ خطأ في الاتصال بالخادم';
-        statusDiv.className = 'error';
+        statusDiv.className = 'status-message error';
+        statusDiv.textContent = '❌ خطأ في الاتصال بالخادم';
     }
 });
+
+function resetConfig() {
+    document.getElementById('embedding-model').value = 'all-MiniLM-L6-v2';
+    document.getElementById('llm-model').value = 'TinyLlama/TinyLlama-1.1B-Chat-v1.0';
+    document.getElementById('chunk-size').value = 500;
+    document.getElementById('chunk-overlap').value = 50;
+    document.getElementById('top-k').value = 5;
+    document.getElementById('similarity-threshold').value = 0.3;
+    
+    const statusDiv = document.getElementById('config-status');
+    statusDiv.className = 'status-message info';
+    statusDiv.textContent = 'تم تعيين القيم الافتراضية، قم بالحفظ لتطبيقها';
+}
 
 document.getElementById('user-input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -269,10 +368,5 @@ async function loadConfig() {
 window.onload = function() {
     showSection('chat');
     loadConfig();
-    
-    const chatBox = document.getElementById('chat-box');
-    const welcome = document.createElement('div');
-    welcome.className = 'message system-message';
-    welcome.innerHTML = 'مرحباً بك في نظام RAG العربي! 👋<br><br>يمكنك:<br>1. رفع مستندات نصية من قسم "رفع ملفات"<br>2. طرح أسئلة باللغة العربية<br>3. ضبط إعدادات النظام حسب الحاجة';
-    chatBox.appendChild(welcome);
+    setupDragAndDrop();
 };

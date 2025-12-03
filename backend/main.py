@@ -14,11 +14,8 @@ app.add_middleware(
 )
 
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
-app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+if os.path.exists(frontend_path):
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
 
-from .apis import app as api_router
-app.include_router(api_router)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+import backend.apis
+app.include_router(backend.apis.app.router)

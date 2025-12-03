@@ -9,84 +9,129 @@
 <body>
     <div class="container">
         <header>
-            <h1>نظام RAG العربي</h1>
-            <nav>
-                <button onclick="showSection('chat')">محادثة</button>
-                <button onclick="showSection('search')">بحث</button>
-                <button onclick="showSection('upload')">رفع ملفات</button>
-                <button onclick="showSection('system')">إعدادات</button>
-            </nav>
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <h1>نظام RAG العربي</h1>
+                </div>
+                <nav>
+                    <button onclick="showSection('chat')" class="active">محادثة</button>
+                    <button onclick="showSection('search')">بحث</button>
+                    <button onclick="showSection('upload')">رفع ملفات</button>
+                    <button onclick="showSection('system')">إعدادات</button>
+                </nav>
+            </div>
         </header>
 
         <main>
-            <div id="chat-section" class="section">
+            <!-- Chat Section -->
+            <section id="chat-section" class="section active">
                 <div class="chat-container">
-                    <div id="chat-box" class="chat-box"></div>
-                    <div class="input-area">
-                        <textarea id="user-input" placeholder="اكتب سؤالك هنا..."></textarea>
-                        <button onclick="sendMessage()">إرسال</button>
+                    <div class="chat-header">
+                        <h2>المحادثة</h2>
+                        <div class="status-indicator">
+                            <div class="status-dot"></div>
+                            <span>النظام يعمل</span>
+                        </div>
+                    </div>
+                    <div id="chat-box" class="chat-box">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💬</div>
+                            <h3>مرحباً بك في نظام RAG العربي</h3>
+                            <p>ابدأ بالحديث مع النظام أو قم برفع بعض المستندات</p>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <div class="input-area">
+                            <textarea id="user-input" placeholder="اكتب سؤالك هنا... (اضغط Enter للإرسال، Shift+Enter لسطر جديد)"></textarea>
+                            <button onclick="sendMessage()" id="send-button">
+                                <span>إرسال</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="search-section" class="section" style="display: none;">
+            <!-- Search Section -->
+            <section id="search-section" class="section">
                 <div class="search-container">
-                    <h2>بحث في المستندات</h2>
-                    <div class="search-input">
-                        <input type="text" id="search-query" placeholder="اكثر كلمة للبحث...">
-                        <button onclick="performSearch()">بحث</button>
+                    <div class="search-header">
+                        <div class="search-input-container">
+                            <input type="text" id="search-query" placeholder="اكتب كلمة أو عبارة للبحث...">
+                            <button onclick="performSearch()">بحث</button>
+                        </div>
                     </div>
-                    <div class="results-container">
-                        <div id="search-results"></div>
+                    <div class="search-results">
+                        <div id="search-results" class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <h3>بحث في المستندات</h3>
+                            <p>ابحث عن المعلومات في المستندات المرفوعة</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="upload-section" class="section" style="display: none;">
+            <!-- Upload Section -->
+            <section id="upload-section" class="section">
                 <div class="upload-container">
-                    <h2>رفع المستندات النصية</h2>
-                    <div class="drop-area" onclick="document.getElementById('folder-input').click()">
-                        <p>اختر مجلد يحتوي على ملفات .txt</p>
-                        <input type="file" id="folder-input" webkitdirectory multiple style="display: none;">
+                    <div class="upload-header">
+                        <h2>رفع المستندات</h2>
+                        <p>ارفع ملفات نصية (.txt) لمعالجتها وإضافتها إلى النظام</p>
                     </div>
+                    <div class="drop-area" id="drop-area" onclick="document.getElementById('folder-input').click()">
+                        <div class="drop-area-icon">📁</div>
+                        <p>انقر لاختيار مجلد يحتوي على ملفات نصية</p>
+                        <small>يتم رفع جميع ملفات .txt في المجلد وتحت المجلدات الفرعية</small>
+                    </div>
+                    <input type="file" id="folder-input" webkitdirectory multiple style="display: none;">
                     <div id="upload-status"></div>
-                    <div id="uploaded-files"></div>
+                    <div class="uploaded-files">
+                        <h3>الملفات المرفوعة</h3>
+                        <div id="uploaded-files-list"></div>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="system-section" class="section" style="display: none;">
+            <!-- System Section -->
+            <section id="system-section" class="section">
                 <div class="config-container">
-                    <h2>إعدادات النظام</h2>
-                    <form id="config-form">
-                        <div class="form-group">
-                            <label>نموذج التضمين:</label>
+                    <div class="config-header">
+                        <h2>إعدادات النظام</h2>
+                        <p>قم بتعديل إعدادات النظام حسب الحاجة</p>
+                    </div>
+                    <form id="config-form" class="config-form">
+                        <div class="form-group full-width">
+                            <label>نموذج التضمين</label>
                             <input type="text" id="embedding-model" placeholder="all-MiniLM-L6-v2">
                         </div>
-                        <div class="form-group">
-                            <label>نموذج اللغة:</label>
+                        <div class="form-group full-width">
+                            <label>نموذج اللغة</label>
                             <input type="text" id="llm-model" placeholder="TinyLlama/TinyLlama-1.1B-Chat-v1.0">
                         </div>
                         <div class="form-group">
-                            <label>حجم القطعة:</label>
+                            <label>حجم القطعة</label>
                             <input type="number" id="chunk-size" min="100" max="2000">
                         </div>
                         <div class="form-group">
-                            <label>التداخل:</label>
+                            <label>التداخل</label>
                             <input type="number" id="chunk-overlap" min="0" max="500">
                         </div>
                         <div class="form-group">
-                            <label>عدد النتائج:</label>
+                            <label>عدد النتائج</label>
                             <input type="number" id="top-k" min="1" max="20">
                         </div>
                         <div class="form-group">
-                            <label>حد التشابه:</label>
+                            <label>حد التشابه</label>
                             <input type="number" id="similarity-threshold" step="0.1" min="0" max="1">
                         </div>
-                        <button type="submit">حفظ</button>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">حفظ الإعدادات</button>
+                            <button type="button" onclick="resetConfig()" class="btn-secondary">إعادة تعيين</button>
+                        </div>
                     </form>
                     <div id="config-status"></div>
                 </div>
-            </div>
+            </section>
         </main>
     </div>
 

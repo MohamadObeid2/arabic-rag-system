@@ -12,8 +12,8 @@ class RAGService:
         self.llm_service = LLMService()
         self.prompt_utils = PromptUtils()
     
-    def set_mongo_service(self, mongo_service):
-        self.chunking_service.set_mongo_service(mongo_service)
+    def set_mongo_client(self, mongo_service):
+        self.chunking_service.set_mongo_client(mongo_service)
     
     def insert(self, folder_path: str, config: dict):
         documents = self.chunking_service.load_text_files(folder_path)
