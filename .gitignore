@@ -9,6 +9,7 @@ venv/
 *.egg-info/
 dist/
 build/
+dataset/
 models/embedding/
 models/llm/
 .DS_Store

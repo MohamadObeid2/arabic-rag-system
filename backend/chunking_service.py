@@ -69,7 +69,6 @@ class ChunkingService:
         metadata = document["metadata"]
         
         text_chunks = self.split_text(text, chunk_size, chunk_overlap)
-        
         chunks = []
         for i, chunk_text in enumerate(text_chunks):
             chunk_data = {
@@ -79,7 +78,6 @@ class ChunkingService:
                 "document_id": f"{metadata['filename']}_{i}"
             }
             chunks.append(chunk_data)
-        
         return chunks
     
     def store_chunks(self, chunks):

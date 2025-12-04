@@ -15,31 +15,40 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-echo "3. Checking virtual environment..."
-python3 -m venv .venv
+echo "3. Setting virtual environment..."
 source .venv/bin/activate
 
-echo "4. Installing requirements..."
-pip install -r requirements.txt
-
-echo "5. Starting Docker containers..."
+echo "4. Starting Docker containers..."
 docker compose up -d
+sleep 5
 
-echo "6. Waiting for services to start..."
-sleep 10
-
-echo "7. Testing MongoDB connection..."
+echo "5. Testing MongoDB connection..."
 python3 -c "
 from pymongo import MongoClient
 try:
     client = MongoClient('mongodb://admin:password@localhost:27017')
     client.admin.command('ping')
-    print('✓ MongoDB connected successfully')
+    print('✅ MongoDB connected successfully')
 except Exception as e:
     print(f'✗ MongoDB connection failed: {e}')
 "
 
-echo "8. Starting the application..."
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
-echo "9. Application started!"
-echo "Open browser: http://localhost:8000"
+echo "6. Testing Milvus connection..."
+python3 -c "
+from pymilvus import connections
+try:
+    connections.connect(host='localhost', port='19530')
+    print('✅ Milvus connected successfully')
+    connections.disconnect('default')
+except Exception as e:
+    print(f'✗ Milvus connection failed: {e}')
+"
+
+echo "7. Starting the application..."
+pid=$(lsof -ti tcp:80)
+if [ -n "$pid" ]; then
+    kill -9 $pid
+    sleep 5
+fi
+echo "✅ Application started successfully: http://localhost"
+uvicorn backend.main:app --host 0.0.0.0 --port 80 --reload

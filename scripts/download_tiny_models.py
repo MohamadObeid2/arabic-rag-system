@@ -1,29 +1,29 @@
 import os
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from sentence_transformers import SentenceTransformer
 import torch
 
-def download_models():
+def download_small_models():
     models_dir = "models"
-    embedding_dir = os.path.join(models_dir, "embedding")
-    llm_dir = os.path.join(models_dir, "llm")
+    embedding_dir = os.path.join(models_dir, "embedding", "all-MiniLM-L6-v2")
+    llm_dir = os.path.join(models_dir, "llm", "TinyLlama-1.1B-Chat-v1.0")
     
     os.makedirs(embedding_dir, exist_ok=True)
     os.makedirs(llm_dir, exist_ok=True)
     
-    print("Downloading embedding model...")
+    print("Downloading smaller embedding model...")
     try:
-        embedding_model = SentenceTransformer('intfloat/multilingual-e5-base')
+        embedding_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
         embedding_model.save(embedding_dir)
         print(f"Embedding model saved to {embedding_dir}")
     except Exception as e:
         print(f"Error downloading embedding model: {e}")
     
-    print("\nDownloading LLM model...")
+    print("\nDownloading smaller LLM model...")
     try:
-        tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2-1.5B-Instruct")
+        tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
         model = AutoModelForCausalLM.from_pretrained(
-            "Qwen/Qwen2-1.5B-Instruct",
+            "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
             torch_dtype=torch.float16,
             device_map="auto"
         )
@@ -33,8 +33,6 @@ def download_models():
         print(f"LLM model saved to {llm_dir}")
     except Exception as e:
         print(f"Error downloading LLM model: {e}")
-        print("Note: For smaller models, you might want to use:")
-        print("Qwen/Qwen2-0.5B-Instruct or microsoft/phi-2")
 
 if __name__ == "__main__":
-    download_models()
+    download_small_models()

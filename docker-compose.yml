@@ -1,30 +1,84 @@
 services:
+
   mongodb:
     image: mongo:6.0
-    container_name: araragsys-mongodb
-    ports:
-      - "27017:27017"
+    container_name: ararabsys-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
-    command: mongod --auth
-
-  milvus:
-    image: milvusdb/milvus:v2.3.4
-    container_name: araragsys-milvus
-    environment:
-      ETCD_ENDPOINTS: etcd:2379
-    command: ["milvus", "run", "standalone"]
     ports:
-      - "19530:19530"
-    depends_on: 
-      - etcd
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ararabsys_network
 
   etcd:
     image: quay.io/coreos/etcd:v3.5.5
-    container_name: araragsys-etcd
+    container_name: ararabsys-etcd
+    command: >
+      etcd
+      --name etcd
+      --data-dir /etcd
+      --listen-client-urls http://0.0.0.0:2379
+      --advertise-client-urls http://etcd:2379
+    volumes:
+      - etcd_data:/etcd
+    networks:
+      - ararabsys_network
+    healthcheck:
+      test: ["CMD", "etcdctl", "--endpoints=http://etcd:2379", "endpoint", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: ararabsys-minio
     environment:
-      - ETCD_AUTO_COMPACTION_MODE=revision
-      - ETCD_AUTO_COMPACTION_RETENTION=1000
-      - ETCD_QUOTA_BACKEND_BYTES=4294967296
-      - ETCD_SNAPSHOT_COUNT=50000
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - ararabsys_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://minio:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  milvus:
+    image: milvusdb/milvus:v2.3.4
+    container_name: ararabsys-milvus
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_ENDPOINTS: "http://etcd:2379"
+      MINIO_ADDRESS: "minio:9000"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin"
+    ports:
+      - "19530:19530"
+      - "19121:19121"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - milvus_data:/var/lib/milvus
+    networks:
+      - ararabsys_network
+
+networks:
+  ararabsys_network:
+
+volumes:
+  mongodb_data:
+  milvus_data:
+  minio_data:
+  etcd_data:

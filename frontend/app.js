@@ -137,7 +137,6 @@ async function performSearch() {
     try {
         const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&top_k=10`);
         const data = await response.json();
-        
         resultsDiv.innerHTML = '';
         
         if (data.success && data.results.length > 0) {
@@ -165,12 +164,28 @@ async function performSearch() {
                 header.appendChild(score);
                 resultItem.appendChild(header);
                 
-                const chunkId = document.createElement('div');
-                chunkId.style.fontSize = '0.875rem';
-                chunkId.style.color = 'var(--text-secondary)';
-                chunkId.style.marginBottom = 'var(--spacing-md)';
-                chunkId.textContent = `المعرف: ${result.chunk_id}`;
-                resultItem.appendChild(chunkId);
+                if (result.content) {
+                    const contentDiv = document.createElement('div');
+                    contentDiv.style.marginTop = 'var(--spacing-md)';
+                    contentDiv.style.fontSize = '14px';
+                    contentDiv.style.color = 'var(--color-text-secondary)';
+                    contentDiv.style.lineHeight = '1.5';
+                    contentDiv.style.textAlign = 'right';
+                    contentDiv.textContent = result.content;
+                    resultItem.appendChild(contentDiv);
+                }
+                
+                if (result.file) {
+                    const fileDiv = document.createElement('div');
+                    fileDiv.style.marginTop = 'var(--spacing-sm)';
+                    fileDiv.style.fontSize = '12px';
+                    fileDiv.style.color = 'var(--color-primary)';
+                    fileDiv.style.display = 'flex';
+                    //fileDiv.style.alignItems = 'center';
+                    fileDiv.style.gap = '4px';
+                    fileDiv.innerHTML = `📄 ${result.file}`;
+                    resultItem.appendChild(fileDiv);
+                }
                 
                 resultsDiv.appendChild(resultItem);
             });
@@ -185,7 +200,11 @@ async function performSearch() {
 
 function setupDragAndDrop() {
     const dropArea = document.getElementById('drop-area');
-    const fileInput = document.getElementById('folder-input');
+    const fileInput = document.getElementById('file-input');
+    
+    dropArea.addEventListener('click', () => {
+        fileInput.click();
+    });
     
     dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -213,23 +232,22 @@ function setupDragAndDrop() {
 }
 
 async function handleFileUpload(files) {
-    const txtFiles = files.filter(f => f.webkitRelativePath && f.name.toLowerCase().endsWith('.txt'));
+    const txtFiles = files.filter(f => f.name.toLowerCase().endsWith('.txt'));
     
     if (txtFiles.length === 0) {
-        showStatus('لم يتم العثور على ملفات نصية (.txt) في المجلد', 'error');
+        showStatus('لم يتم العثور على ملفات نصية (.txt)', 'error');
         return;
     }
     
     const statusDiv = document.getElementById('upload-status');
     const filesList = document.getElementById('uploaded-files-list');
     
-    showStatus(`📤 جاري رفع ${txtFiles.length} ملف من المجلد...`, 'info');
+    showStatus(`📤 جاري رفع ${txtFiles.length} ملف...`, 'info');
     filesList.innerHTML = '';
     
     const formData = new FormData();
     txtFiles.forEach(file => {
-        const relativePath = file.webkitRelativePath || file.name;
-        formData.append('files', file, relativePath);
+        formData.append('files', file);
     });
     
     try {

@@ -78,12 +78,12 @@
                         <h2>رفع المستندات</h2>
                         <p>ارفع ملفات نصية (.txt) لمعالجتها وإضافتها إلى النظام</p>
                     </div>
-                    <div class="drop-area" id="drop-area" onclick="document.getElementById('folder-input').click()">
+                    <div class="drop-area" id="drop-area">
                         <div class="drop-area-icon">📁</div>
-                        <p>انقر لاختيار مجلد يحتوي على ملفات نصية</p>
-                        <small>يتم رفع جميع ملفات .txt في المجلد وتحت المجلدات الفرعية</small>
+                        <p>اسحب وأفلت الملفات هنا أو انقر للاختيار</p>
+                        <small>يدعم ملفات النصوص (.txt) فقط - يمكنك اختيار ملفات أو مجلدات</small>
                     </div>
-                    <input type="file" id="folder-input" webkitdirectory multiple style="display: none;">
+                    <input type="file" id="file-input" multiple style="display: none;">
                     <div id="upload-status"></div>
                     <div class="uploaded-files">
                         <h3>الملفات المرفوعة</h3>

@@ -1,30 +1,39 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+import os
 
 class LLMService:
-    def __init__(self):
+    def __init__(self, model_name):
         self.tokenizer = None
         self.model = None
-        self.current_model = None
+        self.current_model = model_name or None
+        self.llm_dir = os.path.join("models", "llm")
+        self.load_model(model_name)
     
-    def load_model(self, model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"):
+    def load_model(self, model_name: str):
         if self.current_model == model_name and self.model:
             return
         
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            print(f"Loading LLM model {model_name}...")
+            parts = model_name.split("/")
+            dir_name = parts[1] if len(parts) > 1 else parts[0]
+            model_dir = os.path.join(self.llm_dir, dir_name)
+
+            self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
             self.model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=torch.float16,
+                model_dir,
+                dtype=torch.float16,
                 device_map="auto"
             )
             self.current_model = model_name
+            print(f"✅ Loaded LLM model {model_name} successfully!")
         except:
             self.tokenizer = None
             self.model = None
             self.current_model = None
     
-    def generate_response(self, prompt: str, model_name: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"):
+    def generate_response(self, prompt: str, model_name: str):
         if not self.model or self.current_model != model_name:
             self.load_model(model_name)
         
@@ -32,12 +41,17 @@ class LLMService:
             return "النموذج غير جاهز للاستخدام"
         
         try:
-            inputs = self.tokenizer(prompt, return_tensors="pt")
+            inputs = self.tokenizer(
+                prompt, 
+                return_tensors="pt",
+                truncation=True,
+                max_length=2048
+            )
             
             with torch.no_grad():
                 outputs = self.model.generate(
                     inputs.input_ids.to(self.model.device),
-                    max_length=600,
+                    max_new_tokens=600,
                     temperature=0.7,
                     do_sample=True
                 )

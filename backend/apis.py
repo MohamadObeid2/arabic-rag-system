@@ -24,9 +24,16 @@ def get_mongo_client():
 def get_rag_service():
     global rag_service
     if rag_service is None:
-        rag_service = RAGService()
-        rag_service.set_mongo_client(get_mongo_client())
+        mongo = get_mongo_client()
+        config_data = mongo.get_config()
+        rag_service = RAGService(config_data)
+        rag_service.set_mongo_client(mongo)
     return rag_service
+
+
+@app.on_event("startup")
+async def startup_event():
+    get_rag_service()
 
 @app.get("/")
 async def get_frontend():
@@ -41,10 +48,10 @@ async def get_frontend():
 async def chat(request: ChatRequest):
     mongo = get_mongo_client()
     config_data = mongo.get_config()
-    rag = get_rag_service()
+    rag_service = get_rag_service()
     
     try:
-        result = rag.search(request.question, config_data)
+        result = rag_service.retrieve(request.question, config_data)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في الخادم: {str(e)}")
@@ -81,9 +88,8 @@ async def upload_files(files: List[UploadFile] = File(...)):
         
         mongo = get_mongo_client()
         config_data = mongo.get_config()
-        rag = get_rag_service()
-        
-        result = rag.insert(temp_dir, config_data)
+        rag_service = get_rag_service()
+        result = rag_service.insert(temp_dir, config_data)
         
         return {
             "success": True,
@@ -110,11 +116,13 @@ async def get_system_config():
 async def update_system_config(config: SystemConfig):
     try:
         mongo = get_mongo_client()
-        config_dict = config.dict()
-        mongo.update_config(config_dict)
+        prev_config_data = mongo.get_config()
+        new_config_data = config.dict()
+        mongo.update_config(prev_config_data, new_config_data)
         
         global rag_service
         rag_service = None
+        get_rag_service()
         
         return {"success": True, "message": "تم حفظ الإعدادات بنجاح"}
     
@@ -125,15 +133,16 @@ async def update_system_config(config: SystemConfig):
 async def search_documents(query: str, top_k: int = 5):
     mongo = get_mongo_client()
     config_data = mongo.get_config()
-    rag = get_rag_service()
+    rag_service = get_rag_service()
     
-    question_embedding = rag.embedding_service.embed_text(query, config_data.get("embedding_model", "all-MiniLM-L6-v2"))
-    
-    if question_embedding:
-        results = rag.vector_store.search(question_embedding, top_k, config_data.get("similarity_threshold", 0.3))
-        return {"success": True, "results": results}
-    
-    return {"success": False, "results": []}
+    results = rag_service.search(query, config_data)
+    return {"success": True, "results": results}
+
+@app.get("/chunks")
+async def getAllChunks(): 
+    mongo = get_mongo_client()
+    all_chunks = mongo.get_all_chunks()
+    return {"success": True, "chunks": all_chunks}
 
 @app.get("/health")
 async def health_check():
