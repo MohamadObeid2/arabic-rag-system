@@ -8,6 +8,10 @@ import tempfile
 
 app = FastAPI()
 
+fonts_path = os.path.join(os.path.dirname(__file__), "..", "static", "fonts")
+if os.path.exists(fonts_path):
+    app.mount("/static/fonts", StaticFiles(directory=fonts_path), name="fonts")
+
 from .models import ChatRequest, SystemConfig
 from .rag_service import RAGService
 from .mongo_client import MongoClient
@@ -156,6 +160,3 @@ async def clear_all_data():
 @app.get("/health")
 async def health_check():
     return {"status": "يعمل", "service": "Arabic Rag System"}
-
-static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
-app.mount("/static", StaticFiles(directory=static_dir), name="static")

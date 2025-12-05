@@ -73,14 +73,14 @@ class RAGService:
                 "sources": []
             }
         
-        results = self.vector_store.search(question_embedding)
+        results, vectors = self.vector_store.search(question_embedding)
         
         if not results:
             return {
                 "answer": "لم أجد معلومات كافية للإجابة",
                 "sources": []
             }
-        
+        print(results)
         chunks = self.mongo_client.get_chunks_by_vector_ids(results)
         prompt = self.prompt_utils.create_prompt(question, chunks)
         answer = self.llm_service.generate_response(prompt)
@@ -110,7 +110,7 @@ class RAGService:
         if not query_embedding:
             return []
         
-        results = self.vector_store.search(query_embedding)
+        results, vectors = self.vector_store.search(query_embedding)
         
         if not results:
             return []

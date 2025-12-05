@@ -1,6 +1,5 @@
 from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType, utility
 import os
-import json
 
 class VectorStore:
     def __init__(self, config):
@@ -9,8 +8,6 @@ class VectorStore:
         self.collection_name = "arabic_docs"
         self.connected = False
         self.collection = None
-        self.loaded = False
-        self.embdedding_dir = os.path.join("models", "embedding")
         self.dim = config["embedding_dim"]
         self.embedding_model = config["embedding_model"]
         self.top_k = config["top_k"]
@@ -18,25 +15,15 @@ class VectorStore:
         self.connect()
     
     def connect(self):
-        try:
-            connections.connect(host=self.host, port=self.port)
-            self.connected = True
-            self.create_collection()
-            self.collection.load()
-        except Exception as e:
-            print(f"Milvus connection failed: {e}")
-            self.connected = False
+        connections.connect(host=self.host, port=self.port)
+        self.connected = True
+        self.create_collection()
+        self.collection.load()
     
     def create_collection(self):
-        if not self.connected:
+        if utility.has_collection(self.collection_name):
+            self.collection = Collection(self.collection_name)
             return
-
-        try:
-            if utility.has_collection(self.collection_name):
-                self.collection = Collection(self.collection_name)
-                return
-        except Exception:
-            pass
         
         fields = [
             FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
@@ -55,77 +42,51 @@ class VectorStore:
         self.collection.create_index("vector", index_params)
 
     def store_vectors(self, vectors, chunk_ids):
-        if not self.connected or not vectors:
-            return []
-        
-        data = [
-            vectors,
-            chunk_ids
-        ]
-        
-        try:
-            mr = self.collection.insert(data)
-            return mr.primary_keys
-        except Exception as e:
-            print(f"Store vectors error: {e}")
-            return []
+        data = [vectors, chunk_ids]
+        mr = self.collection.insert(data)
+        return mr.primary_keys
         
     def search(self, query_vector):
-        if not self.connected or not query_vector:
-            return []
+        search_params = {
+            "metric_type": "COSINE",
+            "params": {"nprobe": 10}
+        }
 
-        try:
-            search_params = {
-                "metric_type": "COSINE",
-                "params": {"nprobe": 10}
-            }
+        search_results = self.collection.search(
+            data=[query_vector],
+            anns_field="vector",
+            param=search_params,
+            limit=self.top_k,
+            output_fields=["chunk_id", "vector"]
+        )
 
-            results = self.collection.search(
-                data=[query_vector],
-                anns_field="vector",
-                param=search_params,
-                limit=self.top_k,
-                output_fields=["chunk_id"]
-            )
+        results = []
+        vectors = []
+        for hit in search_results[0]:
+            similarity = 1 - hit.distance
+            similarity = max(0.0, min(1.0, similarity))
+            if similarity >= self.similarity_threshold:
+                results.append({
+                    "vector_id": str(hit.id),
+                    "chunk_id": hit.entity.get("chunk_id"),
+                    "score": float(similarity)
+                })
+                vectors.append(hit.entity.get("vector"))
 
-            hits = []
-            for hit in results[0]:
-                similarity = 1 - hit.distance
-                similarity = max(0.0, min(1.0, similarity))
-                if similarity >= self.similarity_threshold:
-                    hits.append({
-                        "vector_id": str(hit.id),
-                        "chunk_id": hit.entity.get("chunk_id"),
-                        "score": float(similarity)
-                    })
-
-            return hits
-
-        except Exception as e:
-            print(f"Search error: {e}")
-            return []
+        return results, vectors
     
     def get_all_vectors(self):
-        if not self.connected:
-            return []
-        results = self.collection.query(expr="id >= 0", output_fields=["chunk_id", "id"])
+        results = self.collection.query(expr="id >= 0", output_fields=["chunk_id", "id", "vector"])
         vectors = []
         for result in results:
             vectors.append({
                 "id": result.get("id"),
-                "chunk_id": result.get("chunk_id")
+                "chunk_id": result.get("chunk_id"),
+                "vector": result.get("vector")
             })
-        
         return vectors
     
     def delete_all_vectors(self):
-        if not self.connected:
-            print("Not connected to Milvus.")
-            return
-        
-        try:
-            self.collection.delete(expr="id >= 0")
-            self.collection.flush()
-            print("✅ All vectors deleted successfully.")
-        except Exception as e:
-            print(f"Error deleting vectors: {e}")
+        self.collection.delete(expr="id >= 0")
+        self.collection.flush()
+        print("✅ All vectors deleted successfully.")
