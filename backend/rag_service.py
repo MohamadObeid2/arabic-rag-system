@@ -12,9 +12,10 @@ class RAGService:
         self.vector_store = VectorStore(config)
         self.embedding_service = EmbeddingService(config)
         self.llm_service = LLMService(config)
+        self.mongo_client = None
     
     def set_mongo_client(self, mongo_client):
-        self.chunking_service.set_mongo_client(mongo_client)
+        self.mongo_client = mongo_client
     
     def insert(self, folder_path: str):
         documents = self.chunking_service.load_text_files(folder_path)
@@ -29,7 +30,7 @@ class RAGService:
                 if not chunks:
                     continue
                 
-                chunk_ids = self.chunking_service.store_chunks(chunks)
+                chunk_ids = self.mongo_client.store_chunks(chunks)
                 embeddings = []
                 chunk_id_list = []
                 
@@ -42,8 +43,8 @@ class RAGService:
                 if embeddings:
                     vector_ids = self.vector_store.store_vectors(embeddings, chunk_id_list)
                     for i, vector_id in enumerate(vector_ids):
-                        if self.chunking_service.mongo_client:
-                            self.chunking_service.mongo_client.chunks_collection.update_one(
+                        if self.mongo_client:
+                            self.mongo_client.chunks_collection.update_one(
                                 {"_id": ObjectId(chunk_ids[i])},
                                 {"$set": {"vector_id": vector_id}}
                             )
@@ -80,7 +81,7 @@ class RAGService:
                 "sources": []
             }
         
-        chunks = self.chunking_service.mongo_client.get_chunks_by_vector_ids(results)
+        chunks = self.mongo_client.get_chunks_by_vector_ids(results)
         prompt = self.prompt_utils.create_prompt(question, chunks)
         answer = self.llm_service.generate_response(prompt)
         
@@ -114,6 +115,6 @@ class RAGService:
         if not results:
             return []
         
-        chunks = self.chunking_service.mongo_client.get_chunks_by_vector_ids(results)
+        chunks = self.mongo_client.get_chunks_by_vector_ids(results)
 
         return chunks

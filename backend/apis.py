@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from typing import List
 import os
 import shutil
@@ -155,3 +156,6 @@ async def clear_all_data():
 @app.get("/health")
 async def health_check():
     return {"status": "يعمل", "service": "Arabic Rag System"}
+
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+app.mount("/static", StaticFiles(directory=static_dir), name="static")

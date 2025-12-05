@@ -4,16 +4,12 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 class ChunkingService:
     def __init__(self, config):
-        self.mongo_client = None
         self.chunk_size = config["chunk_size"]
         self.chunk_overlap = config["chunk_overlap"]
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap
         )
-    
-    def set_mongo_client(self, mongo_client):
-        self.mongo_client = mongo_client
     
     def load_text_files(self, folder_path: str) -> List[Dict]:
         documents = []
@@ -49,8 +45,3 @@ class ChunkingService:
                 "document_id": f"{metadata['filename']}_{i}"
             })
         return chunks
-    
-    def store_chunks(self, chunks):
-        if not self.mongo_client:
-            return []
-        return self.mongo_client.store_chunks(chunks)

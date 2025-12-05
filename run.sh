@@ -50,5 +50,6 @@ if [ -n "$pid" ]; then
     sudo kill -9 $pid
     sleep 5
 fi
-echo "✅ Application started successfully: http://localhost"
-uvicorn backend.main:app --host 0.0.0.0 --port 80 --reload
+
+echo "✅ Application started successfully: http://localhost:8000"
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload

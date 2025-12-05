@@ -22,15 +22,23 @@ class LLMService:
             dir_name = parts[1] if len(parts) > 1 else parts[0]
             model_dir = os.path.join(self.llm_dir, dir_name)
 
+            if not os.path.exists(model_dir):
+                print(f"Model directory {model_dir} does not exist!")
+                self.tokenizer = None
+                self.model = None
+                self.current_model = None
+                return
+
             self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_dir,
-                dtype=torch.float32,
-                device_map="auto"
+                device_map="auto",
+                torch_dtype=torch.float32
             )
             self.current_model = model_name
             print(f"✅ Loaded LLM model {model_name} successfully!")
-        except:
+        except Exception as e:
+            print(f"❌ Failed to load model {model_name}: {e}")
             self.tokenizer = None
             self.model = None
             self.current_model = None
@@ -52,23 +60,11 @@ class LLMService:
                 outputs = self.model.generate(
                     inputs.input_ids.to(self.model.device),
                     temperature=0.5,
-                    do_sample=True,
-                    max_new_tokens=300
+                    do_sample=True
                 )
 
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-            marker = "الإجابة بناءً على المعلومات أعلاه:"
-            if marker in response:
-                answer = response.split(marker, 1)[1].strip()
-            else:
-                answer = response.strip()
-
-            if not answer:
-                return "لم أستطع توليد إجابة مناسبة"
-
-            return answer
-
+            return response.strip()
         except Exception as e:
             print(e)
             return "حدث خطأ أثناء توليد الإجابة"

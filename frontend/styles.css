@@ -39,7 +39,8 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+    /*font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;*/
+    font-family: "Noto Sans Arabic", sans-serif;
     background-color: var(--purple-50);
     color: var(--purple-500);
     line-height: 1.6;
