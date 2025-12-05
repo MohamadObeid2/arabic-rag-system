@@ -25,7 +25,7 @@ class LLMService:
             self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_dir,
-                dtype=torch.float16,
+                dtype=torch.float32,
                 device_map="auto"
             )
             self.current_model = model_name
@@ -34,35 +34,41 @@ class LLMService:
             self.tokenizer = None
             self.model = None
             self.current_model = None
-    
+
     def generate_response(self, prompt: str):
-        
         if not self.tokenizer or not self.model:
             return "النموذج غير جاهز للاستخدام"
-        
+
         try:
+            max_model_length = self.tokenizer.model_max_length
             inputs = self.tokenizer(
-                prompt, 
+                prompt[-max_model_length:],
                 return_tensors="pt",
                 truncation=True,
-                max_length=2048
+                max_length=max_model_length
             )
-            
+
             with torch.no_grad():
                 outputs = self.model.generate(
                     inputs.input_ids.to(self.model.device),
-                    max_new_tokens=600,
-                    temperature=0.7,
-                    do_sample=True
+                    temperature=0.5,
+                    do_sample=True,
+                    max_new_tokens=300
                 )
-            
+
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            answer = response[len(prompt):].strip()
-            
+
+            marker = "الإجابة بناءً على المعلومات أعلاه:"
+            if marker in response:
+                answer = response.split(marker, 1)[1].strip()
+            else:
+                answer = response.strip()
+
             if not answer:
                 return "لم أستطع توليد إجابة مناسبة"
-            
+
             return answer
-        
+
         except Exception as e:
-            return f"حدث خطأ أثناء توليد الإجابة"
+            print(e)
+            return "حدث خطأ أثناء توليد الإجابة"

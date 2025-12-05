@@ -1,8 +1,7 @@
-fastapi==0.104.1
+fastapi
 uvicorn[standard]==0.24.0
 pymongo==4.5.0
 pymilvus
-pydantic==2.5.0
 python-multipart==0.0.6
 transformers
 torch
@@ -15,3 +14,5 @@ marshmallow==3.20.1
 qwen-tokenizer
 grpcio>=1.59.0
 accelerate
+langchain
+pydantic
