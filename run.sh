@@ -45,9 +45,9 @@ except Exception as e:
 "
 
 echo "7. Starting the application..."
-pid=$(lsof -ti tcp:80)
+pid=$(sudo lsof -ti tcp:80)
 if [ -n "$pid" ]; then
-    kill -9 $pid
+    sudo kill -9 $pid
     sleep 5
 fi
 echo "✅ Application started successfully: http://localhost"
