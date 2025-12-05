@@ -69,30 +69,8 @@ else
     echo "Note: Models will download on first use"
 fi
 
-echo "9. Setting up VS Code workspace..."
-if command -v code &> /dev/null; then
-    cat > arabic-rag-system.code-workspace << 'EOF'
-{
-    "folders": [
-        {
-            "path": "."
-        }
-    ],
-    "settings": {
-        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-        "python.terminal.activateEnvironment": true
-    }
-}
-EOF
-    echo "VS Code workspace created: arabic-rag-system.code-workspace"
-fi
+chmod +x run.sh
+./run.sh
 
 echo "================================="
 echo "Setup completed successfully!"
-echo ""
-echo "Next steps:"
-echo "1. Run: chmod +x run.sh"
-echo "2. Run: ./run.sh"
-echo "3. Open browser: http://localhost:8000"
-echo ""
-echo "Note: First run may take time to download models."

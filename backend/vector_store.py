@@ -104,3 +104,28 @@ class VectorStore:
         except Exception as e:
             print(f"Search error: {e}")
             return []
+    
+    def get_all_vectors(self):
+        if not self.connected:
+            return []
+        results = self.collection.query(expr="id >= 0", output_fields=["chunk_id", "id"])
+        vectors = []
+        for result in results:
+            vectors.append({
+                "id": result.get("id"),
+                "chunk_id": result.get("chunk_id")
+            })
+        
+        return vectors
+    
+    def delete_all_vectors(self):
+        if not self.connected:
+            print("Not connected to Milvus.")
+            return
+        
+        try:
+            self.collection.delete(expr="id >= 0")
+            self.collection.flush()
+            print("✅ All vectors deleted successfully.")
+        except Exception as e:
+            print(f"Error deleting vectors: {e}")

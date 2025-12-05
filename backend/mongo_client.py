@@ -15,10 +15,10 @@ class MongoClient:
     def init_databases(self):
         if "chunks" not in self.db.list_collection_names():
             self.db.create_collection("chunks")
-
+            
         if "system_config" not in self.db.list_collection_names():
             self.db.create_collection("system_config")
-
+            
         self.config = self.config_collection.find_one({"_id": "default"})
         
         if not self.config:
@@ -32,7 +32,7 @@ class MongoClient:
                 "embedding_dim": os.getenv("EMBEDDING_DIM", 384),
             }
             self.config_collection.insert_one({"_id": "default", **self.config})
-    
+        
     def store_chunks(self, chunks):
         chunk_ids = []
         
@@ -104,3 +104,10 @@ class MongoClient:
         )
 
         self.config = updated_config
+
+    def delete_all_chunks(self):
+        try:
+            self.chunks_collection.delete_many({})
+            print("✅ All chunks deleted successfully.")
+        except Exception as e:
+            print(f"Error deleting chunks: {e}")

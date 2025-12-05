@@ -1,21 +1,27 @@
 services:
 
-  mongodb:
+  mongo:
     image: mongo:6.0
-    container_name: ararabsys-mongodb
+    container_name: araragsys-mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongo_data:/data/db
     networks:
-      - ararabsys_network
+      - araragsys_network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/127.0.0.1/27017"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   etcd:
     image: quay.io/coreos/etcd:v3.5.5
-    container_name: ararabsys-etcd
+    container_name: araragsys-etcd
     command: >
       etcd
       --name etcd
@@ -25,7 +31,7 @@ services:
     volumes:
       - etcd_data:/etcd
     networks:
-      - ararabsys_network
+      - araragsys_network
     healthcheck:
       test: ["CMD", "etcdctl", "--endpoints=http://etcd:2379", "endpoint", "health"]
       interval: 5s
@@ -34,7 +40,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: ararabsys-minio
+    container_name: araragsys-minio
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
@@ -45,7 +51,7 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - ararabsys_network
+      - araragsys_network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://minio:9000/minio/health/live"]
       interval: 5s
@@ -54,7 +60,7 @@ services:
 
   milvus:
     image: milvusdb/milvus:v2.3.4
-    container_name: ararabsys-milvus
+    container_name: araragsys-milvus
     command: ["milvus", "run", "standalone"]
     environment:
       ETCD_ENDPOINTS: "http://etcd:2379"
@@ -72,13 +78,17 @@ services:
     volumes:
       - milvus_data:/var/lib/milvus
     networks:
-      - ararabsys_network
+      - araragsys_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/api/v1/health"]
+      interval: 5s
+      timeout: 3s
 
 networks:
-  ararabsys_network:
+  araragsys_network:
 
 volumes:
-  mongodb_data:
+  mongo_data:
   milvus_data:
   minio_data:
   etcd_data:

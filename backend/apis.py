@@ -136,6 +136,22 @@ async def getAllChunks():
     all_chunks = mongo.get_all_chunks()
     return {"success": True, "chunks": all_chunks}
 
+@app.get("/vectors")
+async def getAllVectors(): 
+    rag_service = get_rag_service()
+    vectors = rag_service.vector_store.get_all_vectors()
+    return {"success": True, "vectors": vectors}
+
+@app.get("/clean")
+async def clear_all_data():
+    rag_service = get_rag_service()
+    mongo = get_mongo_client()
+    
+    rag_service.vector_store.delete_all_vectors()
+    mongo.delete_all_chunks()
+    
+    return {"success": True, "message": "تم حذف جميع المتجهات والأجزاء بنجاح"}
+    
 @app.get("/health")
 async def health_check():
-    return {"status": "يعمل", "service": "arabic_rag"}
+    return {"status": "يعمل", "service": "Arabic Rag System"}
