@@ -3,6 +3,10 @@
 echo "Setting up Arabic RAG System..."
 echo "================================"
 
+export DOCKER_HOST=unix:///var/run/docker.sock
+export DOCKER_TLS_VERIFY=
+export DOCKER_CERT_PATH=
+
 echo "1. Checking Docker..."
 if ! command -v docker &> /dev/null; then
     echo "Docker not found. Please install Docker first."

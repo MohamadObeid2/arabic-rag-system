@@ -2,8 +2,10 @@ import os
 from typing import List, Dict
 
 class ChunkingService:
-    def __init__(self):
+    def __init__(self, config):
         self.mongo_client = None
+        self.chunk_size = config["chunk_size"]
+        self.chunk_overlap = config["chunk_overlap"]
     
     def set_mongo_client(self, mongo_client):
         self.mongo_client = mongo_client
@@ -37,21 +39,20 @@ class ChunkingService:
         
         return documents
     
-    def split_text(self, text: str, chunk_size: int = 500, chunk_overlap: int = 50) -> List[str]:
+    def split_text(self, text: str) -> List[str]:
         chunks = []
         
         if not text:
             return chunks
         
         words = text.split()
-        
-        if len(words) <= chunk_size:
+        if len(words) <= self.chunk_size:
             chunks.append(text)
             return chunks
         
         start = 0
         while start < len(words):
-            end = start + chunk_size
+            end = start + self.chunk_size
             
             chunk_words = words[start:end]
             chunk_text = ' '.join(chunk_words)
@@ -60,15 +61,15 @@ class ChunkingService:
             if end >= len(words):
                 break
             
-            start = end - chunk_overlap
+            start = end - self.chunk_overlap
         
         return chunks
     
-    def create_chunks(self, document, chunk_size=500, chunk_overlap=50):
+    def create_chunks(self, document):
         text = document["content"]
         metadata = document["metadata"]
         
-        text_chunks = self.split_text(text, chunk_size, chunk_overlap)
+        text_chunks = self.split_text(text)
         chunks = []
         for i, chunk_text in enumerate(text_chunks):
             chunk_data = {

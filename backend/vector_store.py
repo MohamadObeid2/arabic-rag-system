@@ -3,41 +3,33 @@ import os
 import json
 
 class VectorStore:
-    def __init__(self, embedding_model):
+    def __init__(self, config):
         self.host = os.getenv("MILVUS_HOST", "localhost")
         self.port = os.getenv("MILVUS_PORT", "19530")
         self.collection_name = "arabic_docs"
-        self.dim = 384
         self.connected = False
         self.collection = None
         self.loaded = False
         self.embdedding_dir = os.path.join("models", "embedding")
-        self._connect(embedding_model)
+        self.dim = config["embedding_dim"]
+        self.embedding_model = config["embedding_model"]
+        self.top_k = config["top_k"]
+        self.similarity_threshold = config["similarity_threshold"]
+        self.connect()
     
-    def _connect(self, embedding_model: str):
+    def connect(self):
         try:
             connections.connect(host=self.host, port=self.port)
             self.connected = True
-            self.create_collection(embedding_model)
+            self.create_collection()
             self.collection.load()
         except Exception as e:
             print(f"Milvus connection failed: {e}")
             self.connected = False
     
-    def create_collection(self, embedding_model):
+    def create_collection(self):
         if not self.connected:
             return
-
-        parts = embedding_model.split("/")
-        dir_name = parts[1] if len(parts) > 1 else parts[0]
-        config_file = os.path.join(self.embdedding_dir, dir_name, "config.json")
-
-        with open(config_file, "r", encoding="utf-8") as f:
-            config_data = json.load(f)
-
-        self.dim = config_data.get("hidden_size")
-        if not self.dim:
-            raise ValueError(f"hidden_size not found in {config_file}")
 
         try:
             if utility.has_collection(self.collection_name):
@@ -45,7 +37,7 @@ class VectorStore:
                 return
         except Exception:
             pass
-
+        
         fields = [
             FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
             FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=self.dim),
@@ -78,7 +70,7 @@ class VectorStore:
             print(f"Store vectors error: {e}")
             return []
         
-    def search(self, query_vector, top_k=3, threshold=0.5):
+    def search(self, query_vector):
         if not self.connected or not query_vector:
             return []
 
@@ -92,7 +84,7 @@ class VectorStore:
                 data=[query_vector],
                 anns_field="vector",
                 param=search_params,
-                limit=top_k,
+                limit=self.top_k,
                 output_fields=["chunk_id"]
             )
 
@@ -100,7 +92,7 @@ class VectorStore:
             for hit in results[0]:
                 similarity = 1 - hit.distance
                 similarity = max(0.0, min(1.0, similarity))
-                if similarity >= threshold:
+                if similarity >= self.similarity_threshold:
                     hits.append({
                         "vector_id": str(hit.id),
                         "chunk_id": hit.entity.get("chunk_id"),

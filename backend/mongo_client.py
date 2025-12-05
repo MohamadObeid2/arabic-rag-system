@@ -1,5 +1,6 @@
 from pymongo import MongoClient as MongoClient_
 import os
+import json
 from datetime import datetime
 
 class MongoClient:
@@ -9,6 +10,7 @@ class MongoClient:
         self.db = self.client.arabic_rag
         self.chunks_collection = self.db.chunks
         self.config_collection = self.db.system_config
+        self.config = None
     
     def init_databases(self):
         if "chunks" not in self.db.list_collection_names():
@@ -17,35 +19,19 @@ class MongoClient:
         if "system_config" not in self.db.list_collection_names():
             self.db.create_collection("system_config")
 
-        default_exists = self.config_collection.find_one({"_id": "default"})
+        self.config = self.config_collection.find_one({"_id": "default"})
         
-        if not default_exists:
-            default_config = {
+        if not self.config:
+            self.config = {
                 "chunk_size": int(os.getenv("CHUNK_SIZE", "500")),
                 "chunk_overlap": int(os.getenv("CHUNK_OVERLAP", "50")),
                 "top_k": int(os.getenv("TOP_K", "3")),
                 "similarity_threshold": float(os.getenv("SIMILARITY_THRESHOLD", "0.5")),
                 "embedding_model": os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
                 "llm_model": os.getenv("LLM_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"),
-                "embedding_model_changed": False,
+                "embedding_dim": os.getenv("EMBEDDING_DIM", 384),
             }
-            self.config_collection.insert_one({"_id": "default", **default_config})
-    
-    def get_config(self):
-        config = self.config_collection.find_one({"_id": "default"})
-        return config
-    
-    def update_config(self, prev_config, new_config):
-
-        if prev_config["embedding_model"] != new_config["embedding_model"]:
-            new_config["embedding_model_changed"] = True
-
-        new_config['_id'] = 'default'
-        self.config_collection.update_one(
-            {"_id": "default"},
-            {"$set": new_config},
-            upsert=True
-        )
+            self.config_collection.insert_one({"_id": "default", **self.config})
     
     def store_chunks(self, chunks):
         chunk_ids = []
@@ -89,3 +75,32 @@ class MongoClient:
                 "created_at": chunk.get("created_at")
             })
         return chunks
+    
+    def get_config(self):
+        return self.config
+        
+    def update_config(self, config):
+        updated_config = dict(self.config)
+        updated_config.update(config)
+
+        if self.config.get("embedding_model") != config.get("embedding_model"):
+            parts = updated_config["embedding_model"].split("/")
+            dir_name = parts[1] if len(parts) > 1 else parts[0]
+            embdedding_dir = os.path.join("models", "embedding")
+            config_file = os.path.join(embdedding_dir, dir_name, "config.json")
+            try:
+                with open(config_file, "r", encoding="utf-8") as f:
+                    model_config = json.load(f)
+                updated_config["dim"] = model_config.get("hidden_size")
+            except:
+                pass
+
+        updated_config["_id"] = "default"
+
+        self.config_collection.update_one(
+            {"_id": "default"},
+            {"$set": updated_config},
+            upsert=True
+        )
+
+        self.config = updated_config

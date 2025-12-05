@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 def download_models():
     models_dir = "models"
     embedding_dir = os.path.join(models_dir, "embedding", "multilingual-e5-base")
-    llm_dir = os.path.join(models_dir, "llm", "Qwen2-1.5B-Instruct")
+    llm_dir = os.path.join(models_dir, "llm", "Qwen2-1.5B")
 
     os.makedirs(embedding_dir, exist_ok=True)
     os.makedirs(llm_dir, exist_ok=True)
@@ -21,12 +21,12 @@ def download_models():
     print("\nDownloading LLM model...")
     try:
         tokenizer = AutoTokenizer.from_pretrained(
-            "Qwen/Qwen2-1.5B-Instruct",
+            "Qwen/Qwen2-1.5B",
             trust_remote_code=True
         )
         model = AutoModelForCausalLM.from_pretrained(
-            "Qwen/Qwen2-1.5B-Instruct",
-            torch_dtype="auto",
+            "Qwen/Qwen2-1.5B",
+            dtype="auto",
             device_map="auto",
             trust_remote_code=True
         )
@@ -36,7 +36,7 @@ def download_models():
         print(f"LLM model saved to {llm_dir}")
     except Exception as e:
         print(f"Error downloading LLM model: {e}")
-        print("Tip: For smaller models, try 'Qwen/Qwen2-0.5B-Instruct' or 'microsoft/phi-2'")
+        print("Tip: For smaller models, try 'Qwen/Qwen2-0.5B' or 'microsoft/phi-2'")
 
 if __name__ == "__main__":
     download_models()

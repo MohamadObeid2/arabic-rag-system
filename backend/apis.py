@@ -26,10 +26,10 @@ def get_rag_service():
     if rag_service is None:
         mongo = get_mongo_client()
         config_data = mongo.get_config()
+        
         rag_service = RAGService(config_data)
         rag_service.set_mongo_client(mongo)
     return rag_service
-
 
 @app.on_event("startup")
 async def startup_event():
@@ -46,12 +46,10 @@ async def get_frontend():
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    mongo = get_mongo_client()
-    config_data = mongo.get_config()
     rag_service = get_rag_service()
     
     try:
-        result = rag_service.retrieve(request.question, config_data)
+        result = rag_service.retrieve(request.question)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"خطأ في الخادم: {str(e)}")
@@ -86,10 +84,8 @@ async def upload_files(files: List[UploadFile] = File(...)):
         if not uploaded_files:
             raise HTTPException(status_code=400, detail="لم يتم العثور على ملفات نصية")
         
-        mongo = get_mongo_client()
-        config_data = mongo.get_config()
         rag_service = get_rag_service()
-        result = rag_service.insert(temp_dir, config_data)
+        result = rag_service.insert(temp_dir)
         
         return {
             "success": True,
@@ -116,9 +112,7 @@ async def get_system_config():
 async def update_system_config(config: SystemConfig):
     try:
         mongo = get_mongo_client()
-        prev_config_data = mongo.get_config()
-        new_config_data = config.dict()
-        mongo.update_config(prev_config_data, new_config_data)
+        mongo.update_config(config.dict())
         
         global rag_service
         rag_service = None
@@ -131,11 +125,9 @@ async def update_system_config(config: SystemConfig):
 
 @app.get("/api/search")
 async def search_documents(query: str, top_k: int = 5):
-    mongo = get_mongo_client()
-    config_data = mongo.get_config()
     rag_service = get_rag_service()
     
-    results = rag_service.search(query, config_data)
+    results = rag_service.search(query)
     return {"success": True, "results": results}
 
 @app.get("/chunks")

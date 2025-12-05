@@ -3,13 +3,15 @@ import numpy as np
 import os
 
 class EmbeddingService:
-    def __init__(self, model_name):
+    def __init__(self, config):
         self.model = None
-        self.current_model = model_name or None
+        self.current_model = None
         self.embdedding_dir = os.path.join("models", "embedding")
-        self.load_model(model_name)
+        self.embdedding_model = config["embedding_model"]
+        self.load_model()
     
-    def load_model(self, model_name: str):
+    def load_model(self):
+        model_name = self.embdedding_model
         if self.current_model == model_name and self.model:
             return
         try:
@@ -34,9 +36,7 @@ class EmbeddingService:
             return v
         return v / norm
     
-    def embed_text(self, text: str, model_name: str):
-        if not self.model or self.current_model != model_name:
-            self.load_model(model_name)
+    def embed_text(self, text: str):
         
         if not self.model or not text:
             return None

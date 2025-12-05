@@ -3,14 +3,16 @@ import torch
 import os
 
 class LLMService:
-    def __init__(self, model_name):
+    def __init__(self, config):
         self.tokenizer = None
         self.model = None
-        self.current_model = model_name or None
+        self.llm_model = config["llm_model"]
+        self.current_model = None
         self.llm_dir = os.path.join("models", "llm")
-        self.load_model(model_name)
+        self.load_model()
     
-    def load_model(self, model_name: str):
+    def load_model(self):
+        model_name = self.llm_model
         if self.current_model == model_name and self.model:
             return
         
@@ -33,9 +35,7 @@ class LLMService:
             self.model = None
             self.current_model = None
     
-    def generate_response(self, prompt: str, model_name: str):
-        if not self.model or self.current_model != model_name:
-            self.load_model(model_name)
+    def generate_response(self, prompt: str):
         
         if not self.tokenizer or not self.model:
             return "النموذج غير جاهز للاستخدام"
