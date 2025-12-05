@@ -37,12 +37,10 @@ class EmbeddingService:
         return v / norm
     
     def embed_text(self, text: str):
-        
         if not self.model or not text:
             return None
-        try:
-            embedding = self.model.encode(text, convert_to_numpy=True)
-            embedding = self.normalize(embedding)
-            return embedding.tolist()
-        except:
-            return None
+
+        embedding = self.model.encode(text, convert_to_numpy=True)
+        embedding = self.normalize(embedding)
+
+        return embedding.tolist()

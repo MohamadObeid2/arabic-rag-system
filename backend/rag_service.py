@@ -36,10 +36,11 @@ class RAGService:
                 
                 for i, chunk in enumerate(chunks):
                     embedding = self.embedding_service.embed_text(chunk["content"])
+                    
                     if embedding:
                         embeddings.append(embedding)
                         chunk_id_list.append(chunk_ids[i])
-                
+                        
                 if embeddings:
                     vector_ids = self.vector_store.store_vectors(embeddings, chunk_id_list)
                     for i, vector_id in enumerate(vector_ids):
@@ -80,7 +81,7 @@ class RAGService:
                 "answer": "لم أجد معلومات كافية للإجابة",
                 "sources": []
             }
-        print(results)
+        
         chunks = self.mongo_client.get_chunks_by_vector_ids(results)
         prompt = self.prompt_utils.create_prompt(question, chunks)
         answer = self.llm_service.generate_response(prompt)

@@ -49,7 +49,7 @@ class LLMService:
                 truncation=True,
                 max_length=max_model_length
             )
-
+            
             with torch.no_grad():
                 outputs = self.model.generate(
                     inputs.input_ids.to(self.model.device),
@@ -58,9 +58,12 @@ class LLMService:
                     do_sample=True,
                     pad_token_id=self.tokenizer.eos_token_id
                 )
-
-            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            return response.strip()
+            
+            txt = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            if "### الإجابة (بناءً على المصادر فقط):" in txt:
+                return txt.split("### الإجابة (بناءً على المصادر فقط):")[-1].strip()
+            
+            return txt
         except Exception as e:
             print(e)
             return "حدث خطأ أثناء توليد الإجابة"
