@@ -59,7 +59,7 @@ function addMessage(role, content, sources = []) {
             
             const fileInfo = document.createElement('div');
             fileInfo.className = 'source-file';
-            fileInfo.innerHTML = `📄 ${source.file}`;
+            fileInfo.innerHTML = `📄 ${source.file || (source.metadata?.source && source.metadata.source.split('/').slice(-1)[0])}`;
             sourceItem.appendChild(fileInfo);
             
             const content = document.createElement('div');

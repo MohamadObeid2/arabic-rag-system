@@ -47,13 +47,13 @@ class VectorStore:
             self.create_collection()
             self.collection.load()
 
-    def store_vectors(self, vectors, chunk_ids):
+    def store(self, vectors, chunk_ids):
         vectors = [np.array(v, dtype=np.float32)/np.linalg.norm(v) for v in vectors]
         data = [vectors, chunk_ids]
         mr = self.collection.insert(data)
         return mr.primary_keys
         
-    def search(self, query_vector, query_text=None):
+    def search(self, query_vector):
         query_vector = np.array(query_vector, dtype=np.float32)
         query_vector /= np.linalg.norm(query_vector)
         search_params = {
@@ -95,4 +95,3 @@ class VectorStore:
     def delete_all_vectors(self):
         self.collection.delete(expr="id >= 0")
         self.collection.flush()
-        print("✅ All vectors deleted successfully.")

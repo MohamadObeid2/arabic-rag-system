@@ -17,14 +17,14 @@ class Config:
         
         self.mongo_client = MongoClient(self.mongodb_uri)
         self.db = self.mongo_client.arabic_rag_langchain
-        self.chunks_collection = self.db.chunks_langchain
         self.config_collection = self.db.system_config_langchain
         
+        self.config = self.get_config()
         self.init_database()
     
     def init_database(self):
         if "system_config_langchain" not in self.db.list_collection_names():
-            self.config_collection.insert_one({
+            self.config = {
                 "_id": "default",
                 "chunk_size": self.chunk_size,
                 "chunk_overlap": self.chunk_overlap,
@@ -32,15 +32,19 @@ class Config:
                 "similarity_threshold": self.similarity_threshold,
                 "embedding_model": self.embedding_model,
                 "llm_model": self.llm_model
-            })
+            }
+
+            self.config_collection.insert_one(self.config)
     
     def get_config(self):
         return self.config_collection.find_one({"_id": "default"})
     
     def update_config(self, config_data):
+        updated_config = dict(self.config)
+        updated_config.update(config_data)
         self.config_collection.update_one(
             {"_id": "default"},
-            {"$set": config_data},
+            {"$set": updated_config},
             upsert=True
         )
-        return config_data
+        return updated_config

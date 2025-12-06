@@ -14,20 +14,14 @@ class EmbeddingService:
         model_name = self.embdedding_model
         if self.current_model == model_name and self.model:
             return
-        try:
-            print(f"Loading EMBEDDING model {model_name}...")
-            parts = model_name.split("/")
-            dir_name = parts[1] if len(parts) > 1 else parts[0]
-            model_dir = os.path.join(self.embdedding_dir, dir_name)
-            self.model = SentenceTransformer(
-                model_dir, 
-                device='cpu'
-            )
-            self.current_model = model_name
-            print(f"✅ Loaded EMBEDDING model {model_name} successfully!")
-        except:
-            self.model = None
-            self.current_model = None
+        parts = model_name.split("/")
+        dir_name = parts[1] if len(parts) > 1 else parts[0]
+        model_dir = os.path.join(self.embdedding_dir, dir_name)
+        self.model = SentenceTransformer(
+            model_dir, 
+            device='cpu'
+        )
+        self.current_model = model_name
 
     def normalize(self, v):
         v = np.array(v)

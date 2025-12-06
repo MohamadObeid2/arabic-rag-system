@@ -6,15 +6,11 @@ from typing import List
 import os
 import shutil
 import tempfile
-import uuid
-from datetime import datetime
 
 from .config import Config
-from .chunking_service import ChunkingService
-from .embedding_service import EmbeddingService
-from .vector_store import VectorStore
-from .llm_service import LLMService
-from .rag_service import RAGService
+from .insertion_service import InsertionService
+from .retrieval_service import RetrievalService
+from .models import ChatRequest, ConfigModel
 
 app = FastAPI()
 
@@ -27,11 +23,8 @@ app.add_middleware(
 )
 
 config = Config()
-embedding_service = EmbeddingService(config)
-vector_store = VectorStore(config, embedding_service)
-llm_service = LLMService(config)
-rag_service = RAGService(config, vector_store, llm_service)
-chunking_service = ChunkingService(config)
+insertion_service = InsertionService(config)
+retrieval_service = RetrievalService(config)
 
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 if os.path.exists(frontend_path):
@@ -47,14 +40,20 @@ async def get_frontend():
     return HTMLResponse(content="<h1>نظام RAG العربي يعمل</h1>")
 
 @app.post("/api/chat")
-def chat(question: str):
-    result = rag_service.chat(question)
+def chat(request: ChatRequest):
+    result = retrieval_service.chat(request.question)
     return result
 
 @app.get("/api/search")
 def search(query: str):
-    result = rag_service.search_documents(query)
-    return result
+    query_embedding = retrieval_service.embed_text(query)
+    results = retrieval_service.search(query_embedding, config.top_k)
+    
+    return {
+        "success": True,
+        "query": query,
+        "sources": results
+    }
 
 @app.post("/api/upload")
 async def upload(files: List[UploadFile] = File(...)):
@@ -62,43 +61,24 @@ async def upload(files: List[UploadFile] = File(...)):
     
     uploaded_files = []
     for file in files:
-        if not file.filename.endswith('.txt'):
-            continue
-        
-        file_path = os.path.join(temp_dir, file.filename)
-        content = await file.read()
-        
-        with open(file_path, "wb") as f:
-            f.write(content)
-        
-        uploaded_files.append(file.filename)
+        if file.filename.endswith('.txt'):
+            file_path = os.path.join(temp_dir, file.filename)
+            content = await file.read()
+            with open(file_path, "wb") as f:
+                f.write(content)
+            uploaded_files.append({
+                "filename": file.filename,
+                "size": len(content)
+            })
     
-    if not uploaded_files:
-        raise HTTPException(status_code=400, detail="No text files found")
-    
-    documents = chunking_service.load_and_split_documents(temp_dir)
-    
-    embeddings = embedding_service.embed_documents(documents)
-    
-    chunk_ids = []
-    for doc in documents:
-        chunk_id = str(uuid.uuid4())
-        chunk_ids.append(chunk_id)
-        
-        config.chunks_collection.insert_one({
-            "chunk_id": chunk_id,
-            "content": doc["content"],
-            "metadata": doc["metadata"],
-            "created_at": datetime.utcnow()
-        })
-    
-    vector_store.add_documents(documents, embeddings, chunk_ids)
+    chunks = insertion_service.load_and_split_documents(temp_dir)
+    insertion_service.store(chunks)
     
     shutil.rmtree(temp_dir)
     
     return {
         "success": True,
-        "documents": len(documents),
+        "message": f"تم معالجة {len(uploaded_files)} وثيقة و {len(chunks)} جزء",
         "files": uploaded_files
     }
 
@@ -109,20 +89,9 @@ def get_system():
     return config_data
 
 @app.post("/api/system")
-def update_system(new_config: dict):
+def update_system(new_config: ConfigModel):
     config.update_config(new_config)
     return {"success": True, "message": "Configuration updated"}
-
-@app.get("/api/chunks")
-def get_chunks():
-    chunks = list(config.chunks_collection.find({}, {"_id": 0}))
-    return {"chunks": chunks}
-
-@app.get("/api/clean")
-def clean_all():
-    vector_store.delete_all()
-    config.chunks_collection.delete_many({})
-    return {"success": True, "message": "All data cleared"}
 
 @app.get("/api/health")
 def health():

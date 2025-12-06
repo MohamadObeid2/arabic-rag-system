@@ -27,31 +27,25 @@ class LLMService:
         if self.current_model == model_name and self.model:
             return
         
-        print(f"Loading LLM model {model_name}...")
-        try:
-            parts = model_name.split("/")
-            dir_name = parts[1] if len(parts) > 1 else parts[0]
-            model_dir = os.path.join(self.llm_dir, dir_name)
+        parts = model_name.split("/")
+        dir_name = parts[1] if len(parts) > 1 else parts[0]
+        model_dir = os.path.join(self.llm_dir, dir_name)
 
-            if not os.path.exists(model_dir):
-                self.tokenizer = None
-                self.model = None
-                self.current_model = None
-                return
+        if not os.path.exists(model_dir):
+            self.tokenizer = None
+            self.model = None
+            self.current_model = None
+            return
 
-            self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
-            
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_dir,
-                device_map="auto",
-                torch_dtype=torch.float16
-            )
+        self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
+        
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_dir,
+            device_map="auto",
+            torch_dtype=torch.float16
+        )
 
-            self.current_model = model_name
-            print(f"✅ Loaded LLM model {model_name} successfully!")
-        except Exception as e:
-            print(e)
-            print(f"Failed to load LLM model {model_name}.")
+        self.current_model = model_name
 
     def generate_response(self, prompt: str):
         max_model_length = self.tokenizer.model_max_length

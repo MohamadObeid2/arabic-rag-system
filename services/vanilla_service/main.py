@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+import services.vanilla_service.insertion_service.apis as insertion_apis
+import services.vanilla_service.retrieval_service.apis as retrieval_apis
 import os
 
 app = FastAPI()
@@ -17,5 +19,5 @@ frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 if os.path.exists(frontend_path):
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
 
-import services.vanilla_service.apis
-app.include_router(services.vanilla_service.apis.app.router)
+app.include_router(insertion_apis.app.router)
+app.include_router(retrieval_apis.app.router)

@@ -1,4 +1,4 @@
-from pymongo import MongoClient as MongoClient_
+import pymongo
 import os
 import json
 from datetime import datetime
@@ -6,7 +6,7 @@ from datetime import datetime
 class MongoClient:
     def __init__(self):
         mongodb_uri = os.getenv("MONGODB_URI", "mongodb://admin:password@localhost:27017")
-        self.client = MongoClient_(mongodb_uri)
+        self.client = pymongo.MongoClient(mongodb_uri)
         self.db = self.client.arabic_rag
         self.chunks_collection = self.db.chunks
         self.config_collection = self.db.system_config
@@ -75,6 +75,9 @@ class MongoClient:
                 "created_at": chunk.get("created_at")
             })
         return chunks
+
+    def delete_all_chunks(self):
+        self.chunks_collection.delete_many({})
     
     def get_config(self):
         return self.config
@@ -109,10 +112,3 @@ class MongoClient:
         self.config = updated_config
         updated_config["embedding_model_changed"] = embedding_model_changed
         return updated_config
-
-    def delete_all_chunks(self):
-        try:
-            self.chunks_collection.delete_many({})
-            print("✅ All chunks deleted successfully.")
-        except Exception as e:
-            print(f"Error deleting chunks: {e}")

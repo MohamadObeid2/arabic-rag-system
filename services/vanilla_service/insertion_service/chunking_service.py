@@ -17,20 +17,17 @@ class ChunkingService:
             for file in files:
                 if file.endswith('.txt'):
                     path = os.path.join(root, file)
-                    try:
-                        with open(path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                        stat = os.stat(path)
-                        documents.append({
-                            "content": content,
-                            "metadata": {
-                                "filename": file,
-                                "path": path,
-                                "size": stat.st_size
-                            }
-                        })
-                    except:
-                        continue
+                    with open(path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    stat = os.stat(path)
+                    documents.append({
+                        "content": content,
+                        "metadata": {
+                            "filename": file,
+                            "path": path,
+                            "size": stat.st_size
+                        }
+                    })
         return documents
     
     def create_chunks(self, document) -> List[Dict]:

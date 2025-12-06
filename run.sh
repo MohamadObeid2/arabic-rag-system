@@ -49,9 +49,16 @@ except Exception as e:
 echo "8. Starting the application..."
 ./stop.sh
 
-echo "✅ Vanilla application started successfully: http://localhost:8000"
-echo "✅ Langchain application started successfully: http://localhost:8001"
+SERVICE=${1:-both}
 
-uvicorn services.vanilla_service.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir services/vanilla_service &
-uvicorn services.langchain_service.main:app --host 0.0.0.0 --port 8001 --reload --reload-dir services/langchain_service &
-wait
+if [[ "$SERVICE" == "vanilla" ]]; then
+    echo "Starting Vanilla application..."
+    uvicorn services.vanilla_service.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir services/vanilla_service
+    echo "✅ Started Vanilla application: http://localhost:8000"
+fi
+
+if [[ "$SERVICE" == "langchain" ]]; then
+    echo "Starting Langchain application..."
+    uvicorn services.langchain_service.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir services/langchain_service
+    echo "✅ Started Langchain application: http://localhost:8000"
+fi
