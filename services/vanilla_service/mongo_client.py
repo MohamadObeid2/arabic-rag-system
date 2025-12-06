@@ -83,6 +83,8 @@ class MongoClient:
         updated_config = dict(self.config)
         updated_config.update(config)
 
+        embedding_model_changed = False
+
         if self.config.get("embedding_model") != config.get("embedding_model"):
             parts = updated_config["embedding_model"].split("/")
             dir_name = parts[1] if len(parts) > 1 else parts[0]
@@ -91,9 +93,10 @@ class MongoClient:
             try:
                 with open(config_file, "r", encoding="utf-8") as f:
                     model_config = json.load(f)
-                updated_config["dim"] = model_config.get("hidden_size")
+                updated_config["embedding_dim"] = model_config.get("hidden_size")
             except:
                 pass
+            embedding_model_changed = True
 
         updated_config["_id"] = "default"
 
@@ -104,6 +107,8 @@ class MongoClient:
         )
 
         self.config = updated_config
+        updated_config["embedding_model_changed"] = embedding_model_changed
+        return updated_config
 
     def delete_all_chunks(self):
         try:

@@ -20,9 +20,11 @@ source .venv/bin/activate
 
 echo "4. Starting Docker containers..."
 docker compose up -d
-sleep 5
 
-echo "5. Testing MongoDB connection..."
+echo "5. Waiting for 10 sec for containers to fully initialize..."
+sleep 10
+
+echo "6. Testing MongoDB connection..."
 python3 -c "
 from pymongo import MongoClient
 try:
@@ -33,7 +35,7 @@ except Exception as e:
     print(f'✗ MongoDB connection failed: {e}')
 "
 
-echo "6. Testing Milvus connection..."
+echo "7. Testing Milvus connection..."
 python3 -c "
 from pymilvus import connections
 try:
@@ -44,12 +46,12 @@ except Exception as e:
     print(f'✗ Milvus connection failed: {e}')
 "
 
-echo "7. Starting the application..."
-pid=$(lsof -ti tcp:80)
-if [ -n "$pid" ]; then
-    kill -9 $pid
-    sleep 5
-fi
+echo "8. Starting the application..."
+./stop.sh
 
-echo "✅ Application started successfully: http://localhost:8000"
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+echo "✅ Vanilla application started successfully: http://localhost:8000"
+echo "✅ Langchain application started successfully: http://localhost:8001"
+
+uvicorn services.vanilla_service.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir services/vanilla_service &
+uvicorn services.langchain_service.main:app --host 0.0.0.0 --port 8001 --reload --reload-dir services/langchain_service &
+wait

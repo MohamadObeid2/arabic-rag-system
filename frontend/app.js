@@ -139,13 +139,13 @@ async function performSearch() {
         const data = await response.json();
         resultsDiv.innerHTML = '';
         
-        if (data.success && data.results.length > 0) {
+        if (data.success && data.sources.length > 0) {
             const count = document.createElement('div');
             count.className = 'results-count';
-            count.textContent = `تم العثور على ${data.results.length} نتيجة`;
+            count.textContent = `تم العثور على ${data.sources.length} نتائج`;
             resultsDiv.appendChild(count);
             
-            data.results.forEach((result, index) => {
+            data.sources.forEach((result, index) => {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item';
                 

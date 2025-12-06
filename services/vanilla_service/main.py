@@ -13,9 +13,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 if os.path.exists(frontend_path):
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
 
-import backend.apis
-app.include_router(backend.apis.app.router)
+import services.vanilla_service.apis
+app.include_router(services.vanilla_service.apis.app.router)

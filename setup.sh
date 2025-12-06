@@ -60,7 +60,10 @@ pip install --upgrade pip
 echo "7. Installing Python requirements..."
 pip install -r requirements.txt
 
-echo "8. Downloading small models..."
+echo "8. Installing torch for GPU..."
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+echo "9. Downloading small models..."
 if [ -f "scripts/download_small_models.py" ]; then
     python3 scripts/download_small_models.py
 else

@@ -36,15 +36,15 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: "Noto Sans Arabic", sans-serif;
 }
 
 body {
-    /*font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', sans-serif;*/
-    font-family: "Noto Sans Arabic", sans-serif;
     background-color: var(--purple-50);
     color: var(--purple-500);
     line-height: 1.6;
     font-size: 14px;
+    font-weight: 300;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -52,7 +52,7 @@ body {
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     background: var(--primary-white);
@@ -175,7 +175,7 @@ main {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 600px;
+    height: auto;
 }
 
 .chat-header {
@@ -373,7 +373,6 @@ main {
     font-size: 1.05rem;
     resize: none;
     height: 80px;
-    font-family: inherit;
     transition: all 0.2s;
     background: var(--primary-white);
     color: var(--purple-500);
