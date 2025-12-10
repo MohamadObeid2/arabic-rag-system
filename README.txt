@@ -1,32 +1,35 @@
 # Move installers folder
-Move installers folder to C:\
+Move installers folder from flash drive to C:\
 
-# Install the following packages:
-1 Python
-2 Vscode
-3 Docker
-4 rustup
-5 WSL
-6 ollama
-7 visualstudio
+# Open cmd
+Open cmd from installers folder
 
-# Install C++
-cd C:\installers\packages\visualstudio\offline
+# Install the following packages which exist in packages folder:
+1 Python: C:\installers\packages\python\python-3.12.3-amd64.exe
+2 Vscode: C:\installers\packages\vscode\VSCodeUserSetup-x64-1.106.3.exe
+3 Docker: C:\installers\packages\docker\Docker Desktop Installer.exe
+4 rustup: C:\installers\packages\rustup\rustup-init.exe
+5 WSL: C:\installers\packages\wsl\wsl.2.6.2.0.x64.msi
+6 Ollama: C:\installers\packages\ollama\OllamaSetup.exe
+
+# Install visual studio and C++
 C:\installers\packages\visualstudio\vs_community.exe --noWeb
 
 # Source
-cd <root-project>
+cd arabic-rag-system
 python -m venv .venv
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .venv\Scripts\activate
 
 # install python libs
 ## Options:
-    1. unzip .venv folder and mv to project root folder
-    2. pip install --no-index --find-links=C:\installers\libraries -r requirements.txt
+    1. unzip .venv folder
+    2. using pip installer:
+        2.1. pip install --no-index --find-links=C:\installers\libraries --upgrade pip setuptools wheel
+        2.2. pip install --no-index --find-links=C:\installers\libraries -r requirements.txt
 
-# Transfer .ollama folder to:
-C:\Users\<Username>\.ollama\models\
+# Transfer .ollama folder from installers to:
+C:\Users\<Username>\
 
 # Verirfy ollama model
 ollama list
@@ -42,4 +45,6 @@ docker load -i milvus.tar
 docker compose up -d
 
 # Run app
-./run.ps1 -service vanilla
+## Options (but lets run vanilla app first):
+    1. Vanilla: C:\installers\arabic-rag-system\run.ps1 -service vanilla
+    2. Langchain: C:\installers\arabic-rag-system\run.ps1 -service langchain

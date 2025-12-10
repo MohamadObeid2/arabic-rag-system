@@ -15,6 +15,8 @@ numpy==1.26.4
 setuptools<81
 pydantic>=2.7.4,<3.0.0
 tenacity>=8.1.0,<9.0.0
-langchain==1.0
 ollama
 torch
+langchain==1.0
+langchain_text_splitters
+langchain_community
