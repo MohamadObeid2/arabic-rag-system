@@ -1,63 +1,45 @@
-Arabic RAG System
+# Move installers folder
+Move installers folder to C:\
 
-A simple Arabic Retrieval-Augmented Generation system that runs completely offline.
+# Install the following packages:
+1 Python
+2 Vscode
+3 Docker
+4 rustup
+5 WSL
+6 ollama
+7 visualstudio
 
-Features:
-- Process Arabic text documents (.txt files)
-- Local embedding model (all-MiniLM-L6-v2)
-- Local LLM (TinyLlama-1.1B-Chat)
-- MongoDB for document storage
-- Milvus for vector search
-- Modern Arabic interface
-- Bulk document upload
-- Configurable parameters
-- Search functionality
+# Install C++
+cd C:\installers\packages\visualstudio\offline
+C:\installers\packages\visualstudio\vs_community.exe --noWeb
 
-Requirements:
-- Docker and Docker Compose
-- Python 3.8+
-- 4GB+ RAM
-- Internet connection for first model download
+# Source
+cd <root-project>
+python -m venv .venv
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.venv\Scripts\activate
 
-Setup:
-1. Run: chmod +x run.sh
-2. Run: ./run.sh
+# install python libs
+## Options:
+    1. unzip .venv folder and mv to project root folder
+    2. pip install --no-index --find-links=C:\installers\libraries -r requirements.txt
 
-The script will:
-- Start MongoDB and Milvus containers
-- Install Python dependencies
-- Start the web server
+# Transfer .ollama folder to:
+C:\Users\<Username>\.ollama\models\
 
-Open: http://localhost:8000
+# Verirfy ollama model
+ollama list
 
-Folder Structure:
-- backend/: FastAPI server
-- frontend/: HTML/CSS/JS interface
-- models/: Local model files (downloaded automatically)
-- dataset/: Your Arabic text files
-- scripts/: Utility scripts
+# Load docker images: first run docker desktop
+cd C:\installers\docker-images
+docker load -i mongo.tar
+docker load -i etcd.tar
+docker load -i minio.tar
+docker load -i milvus.tar
 
-API Endpoints:
-- GET /: Frontend interface
-- POST /api/chat: Chat with documents
-- POST /api/upload: Upload text files
-- GET/POST /api/system: System configuration
-- GET /api/search: Search vectors
-- GET /health: Health check
+# Run docker containers
+docker compose up -d
 
-Configuration:
-Edit .env file for database settings
-Models can be changed from web interface
-
-Default Models:
-- Embedding: all-MiniLM-L6-v2
-- LLM: TinyLlama/TinyLlama-1.1B-Chat-v1.0
-
-Troubleshooting:
-- Check Docker is running
-- Check ports 27017 and 19530 are free
-- Run download scripts if models fail
-- Check console for errors
-
-test on this windows
-windows 11 enterprise version 2600.11.3669
+# Run app
+./run.ps1 -service vanilla

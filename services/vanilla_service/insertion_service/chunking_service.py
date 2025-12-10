@@ -1,15 +1,10 @@
 import os
 from typing import List, Dict
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class ChunkingService:
     def __init__(self, config):
         self.chunk_size = config["chunk_size"]
         self.chunk_overlap = config["chunk_overlap"]
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
-            chunk_overlap=self.chunk_overlap
-        )
     
     def load_text_files(self, folder_path: str) -> List[Dict]:
         documents = []
@@ -31,14 +26,20 @@ class ChunkingService:
         return documents
     
     def create_chunks(self, document) -> List[Dict]:
-        text_chunks = self.text_splitter.split_text(document["content"])
+        text = document["content"]
         metadata = document["metadata"]
         chunks = []
-        for i, chunk_text in enumerate(text_chunks):
+        start = 0
+        index = 0
+        while start < len(text):
+            end = start + self.chunk_size
+            chunk_text = text[start:end]
             chunks.append({
                 "content": chunk_text,
                 "metadata": metadata.copy(),
-                "chunk_index": i,
-                "document_id": f"{metadata['filename']}_{i}"
+                "chunk_index": index,
+                "document_id": f"{metadata['filename']}_{index}"
             })
+            start += self.chunk_size - self.chunk_overlap
+            index += 1
         return chunks

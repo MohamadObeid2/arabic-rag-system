@@ -47,7 +47,6 @@ except Exception as e:
 "
 
 echo "8. Starting the application..."
-./stop.sh
 
 SERVICE=${1:-both}
 
