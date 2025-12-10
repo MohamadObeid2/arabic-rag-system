@@ -135,7 +135,7 @@ async function performSearch() {
     resultsDiv.innerHTML = '<div class="empty-state"><div class="loading"></div><h3>جاري البحث...</h3></div>';
     
     try {
-        const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&top_k=10`);
+        const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
         const data = await response.json();
         resultsDiv.innerHTML = '';
         

@@ -58,3 +58,6 @@ Troubleshooting:
 - Check ports 27017 and 19530 are free
 - Run download scripts if models fail
 - Check console for errors
+
+test on this windows
+windows 11 enterprise version 2600.11.3669

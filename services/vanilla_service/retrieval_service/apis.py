@@ -1,7 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
 from ..models import ChatRequest, ConfigModel
-import os
 
 app = FastAPI()
 
@@ -31,20 +29,10 @@ def get_retrieval_service():
 async def startup_event():
     get_retrieval_service()
 
-@app.get("/")
-async def get_frontend():
-    frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "index.html")
-    if os.path.exists(frontend_path):
-        with open(frontend_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
-        return HTMLResponse(content=html_content)
-    return HTMLResponse(content="<h1>نظام RAG العربي يعمل</h1>")
-
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    print(request)
     retrieval_service = get_retrieval_service()
-    result = retrieval_service.retrieve(request.question)
+    result = retrieval_service.chat(request.question)
     return result
 
 @app.get("/api/search")

@@ -425,7 +425,7 @@ main {
 .search-container {
     display: flex;
     flex-direction: column;
-    height: 600px;
+    height: auto;
 }
 
 .search-header {

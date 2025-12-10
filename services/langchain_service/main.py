@@ -4,12 +4,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from typing import List
 import os
-import shutil
-import tempfile
 
 from .config import Config
 from .insertion_service import InsertionService
-from .retrieval_service import RetrievalService
+from .chat_service import ChatService
+from .search_service import SearchService
 from .models import ChatRequest, ConfigModel
 
 app = FastAPI()
@@ -24,7 +23,8 @@ app.add_middleware(
 
 config = Config()
 insertion_service = InsertionService(config)
-retrieval_service = RetrievalService(config)
+search_service = SearchService(config)
+chat_service = ChatService(config, search_service)
 
 frontend_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 if os.path.exists(frontend_path):
@@ -41,13 +41,13 @@ async def get_frontend():
 
 @app.post("/api/chat")
 def chat(request: ChatRequest):
-    result = retrieval_service.chat(request.question)
+    result = chat_service.chat(request.question)
     return result
 
 @app.get("/api/search")
 def search(query: str):
-    query_embedding = retrieval_service.embed_text(query)
-    results = retrieval_service.search(query_embedding, config.top_k)
+    query_embedding = search_service.embed_text(query)
+    results = search_service.search(query_embedding, config.top_k)
     
     return {
         "success": True,
@@ -57,30 +57,8 @@ def search(query: str):
 
 @app.post("/api/upload")
 async def upload(files: List[UploadFile] = File(...)):
-    temp_dir = tempfile.mkdtemp()
-    
-    uploaded_files = []
-    for file in files:
-        if file.filename.endswith('.txt'):
-            file_path = os.path.join(temp_dir, file.filename)
-            content = await file.read()
-            with open(file_path, "wb") as f:
-                f.write(content)
-            uploaded_files.append({
-                "filename": file.filename,
-                "size": len(content)
-            })
-    
-    chunks = insertion_service.load_and_split_documents(temp_dir)
-    insertion_service.store(chunks)
-    
-    shutil.rmtree(temp_dir)
-    
-    return {
-        "success": True,
-        "message": f"تم معالجة {len(uploaded_files)} وثيقة و {len(chunks)} جزء",
-        "files": uploaded_files
-    }
+    results = await insertion_service.upload(files)
+    return results
 
 @app.get("/api/system")
 def get_system():

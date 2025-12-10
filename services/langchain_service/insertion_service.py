@@ -1,8 +1,13 @@
 import os
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Milvus
+from pymilvus import connections
 import shutil
+import torch
+import os
+import tempfile
 
 class InsertionService:
     def __init__(self, config):
@@ -13,13 +18,13 @@ class InsertionService:
             chunk_overlap=config.chunk_overlap
         )
         
+        device = get_best_device()
         self.model = HuggingFaceEmbeddings(
             model_name=self.embdedding_model,
-            model_kwargs={"device": "cpu"},
+            model_kwargs={"device": device},
             encode_kwargs={"normalize_embeddings": True}
         )
         
-        from pymilvus import connections
         connections.connect(
             host=config.milvus_host,
             port=config.milvus_port
@@ -29,7 +34,6 @@ class InsertionService:
         self.init_collection()
 
     def init_collection(self):
-        from langchain_community.vectorstores import Milvus
         self.vector_store = Milvus(
             embedding_function=self.model,
             collection_name=self.collection_name,
@@ -58,6 +62,31 @@ class InsertionService:
     def embed_documents(self, documents):
         texts = [doc["content"] for doc in documents]
         return self.model.embed_documents(texts)
+    
+    async def upload(self, files):
+        temp_dir = tempfile.mkdtemp()
+        uploaded_files = []
+        for file in files:
+            if file.filename.endswith('.txt'):
+                file_path = os.path.join(temp_dir, file.filename)
+                content = await file.read()
+                with open(file_path, "wb") as f:
+                    f.write(content)
+                uploaded_files.append({
+                    "filename": file.filename,
+                    "size": len(content)
+                })
+        
+        chunks = self.load_and_split_documents(temp_dir)
+        self.store(chunks)
+        
+        shutil.rmtree(temp_dir)
+        
+        return {
+            "success": True,
+            "message": f"تم معالجة {len(uploaded_files)} وثيقة و {len(chunks)} جزء",
+            "files": uploaded_files
+        }
 
     def store(self, chunks):
         texts = [chunk.page_content for chunk in chunks]
@@ -67,3 +96,11 @@ class InsertionService:
             texts=texts,
             metadatas=metadatas
         )
+    
+def get_best_device():
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.backends.mps.is_available():
+        return "mps"
+    else:
+        return "cpu"

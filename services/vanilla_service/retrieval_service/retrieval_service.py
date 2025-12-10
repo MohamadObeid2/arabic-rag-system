@@ -1,20 +1,20 @@
 from ..shared_services.embedding_service import EmbeddingService
 from ..shared_services.vector_store import VectorStore
-from .prompt_utils import PromptUtils
 from .llm_service import LLMService
+from .prompt_formatter import PromptFormatter
 
 class RetrievalService:
     def __init__(self, config):
-        self.prompt_utils = PromptUtils()
         self.vector_store = VectorStore(config)
         self.embedding_service = EmbeddingService(config)
         self.llm_service = LLMService(config)
         self.mongo_client = None
+        self.prompt_formatter = PromptFormatter()
     
     def set_mongo_client(self, mongo_client):
         self.mongo_client = mongo_client
     
-    def retrieve(self, question: str):
+    def chat(self, question: str):
         if not question.strip():
             return {
                 "question": question,
@@ -41,7 +41,8 @@ class RetrievalService:
             }
         
         chunks = self.mongo_client.get_chunks_by_vector_ids(results)
-        prompt = self.prompt_utils.create_prompt(question, chunks)
+        context = self.prompt_formatter.format_context(chunks)
+        prompt = self.prompt_formatter.format_prompt(question, context)
         answer = self.llm_service.generate_response(prompt)
         
         sources = []

@@ -23,13 +23,13 @@ class MongoClient:
         
         if not self.config:
             self.config = {
-                "chunk_size": int(os.getenv("CHUNK_SIZE", "500")),
+                "chunk_size": int(os.getenv("CHUNK_SIZE", "300")),
                 "chunk_overlap": int(os.getenv("CHUNK_OVERLAP", "50")),
-                "top_k": int(os.getenv("TOP_K", "3")),
+                "top_k": int(os.getenv("TOP_K", "5")),
                 "similarity_threshold": float(os.getenv("SIMILARITY_THRESHOLD", "0.5")),
-                "embedding_model": os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
-                "llm_model": os.getenv("LLM_MODEL", "TinyLlama/TinyLlama-1.1B-Chat-v1.0"),
-                "embedding_dim": os.getenv("EMBEDDING_DIM", 384),
+                "embedding_model": os.getenv("EMBEDDING_MODEL", "multilingual-e5-base"),
+                "llm_model": os.getenv("LLM_MODEL", "qwen2:7b"),
+                "embedding_dim": os.getenv("EMBEDDING_DIM", 768),
             }
             self.config_collection.insert_one({"_id": "default", **self.config})
         
