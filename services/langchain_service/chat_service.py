@@ -23,7 +23,7 @@ class ChatService:
         tokenizer = AutoTokenizer.from_pretrained(model_dir)
         model = AutoModelForCausalLM.from_pretrained(
             model_dir,
-            dtype=torch.float16,
+            torch_dtype=torch.float16,
             device_map="auto"
         )
         pipe = pipeline(
