@@ -33,7 +33,6 @@ class PromptFormatter:
     {system_prompt}
 
     المصادر المتاحة (مرتبة حسب الأهمية، الأعلى درجة أولاً):
-
     {context}
 
     السؤال:
@@ -70,16 +69,9 @@ class PromptFormatter:
     الإجابة:
     """
 
-    def __init__(self):
-        self.templates = {
-            "rag": self.PROMPT_TEMPLATE,
-            "conversation": self.CONVERSATION_PROMPT_TEMPLATE,
-        }
-
-    def format_prompt(self, question: str, context: str, include_system: bool = True) -> str:
-        system_prompt = self.SYSTEM_PROMPT if include_system else ""
+    def format_prompt(self, question: str, context: str) -> str:
         return self.PROMPT_TEMPLATE.format(
-            system_prompt=system_prompt,
+            system_prompt=self.SYSTEM_PROMPT,
             context=context,
             question=question
         )

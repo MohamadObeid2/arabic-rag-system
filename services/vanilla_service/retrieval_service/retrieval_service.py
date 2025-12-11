@@ -1,7 +1,6 @@
 from ..shared_services.embedding_service import EmbeddingService
 from ..shared_services.vector_store import VectorStore
-from .llm_service import LLMService
-from .prompt_formatter import PromptFormatter
+from .ollama_llm_service import LLMService
 
 class RetrievalService:
     def __init__(self, config):
@@ -9,7 +8,6 @@ class RetrievalService:
         self.embedding_service = EmbeddingService(config)
         self.llm_service = LLMService(config)
         self.mongo_client = None
-        self.prompt_formatter = PromptFormatter()
     
     def set_mongo_client(self, mongo_client):
         self.mongo_client = mongo_client
@@ -41,9 +39,7 @@ class RetrievalService:
             }
         
         chunks = self.mongo_client.get_chunks_by_vector_ids(results)
-        context = self.prompt_formatter.format_context(chunks)
-        prompt = self.prompt_formatter.format_prompt(question, context)
-        answer = self.llm_service.generate_response(prompt)
+        answer = self.llm_service.generate_response(question, chunks)
         
         sources = []
         for i, chunk in enumerate(chunks):

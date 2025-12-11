@@ -1,5 +1,6 @@
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_milvus import Milvus
+from .insertion_service import get_best_device
 from pymilvus import connections
 import torch
 
@@ -7,7 +8,7 @@ class SearchService:
     def __init__(self, config):
         self.config = config
         self.embdedding_model = config.embedding_model
-        device = self.get_best_device()
+        device = get_best_device()
         self.model = HuggingFaceEmbeddings(
             model_name=self.embdedding_model,
             model_kwargs={"device": device},
