@@ -1,8 +1,8 @@
 import os
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Milvus
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_milvus import Milvus
 from pymilvus import connections
 import shutil
 import torch

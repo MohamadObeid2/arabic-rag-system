@@ -6,9 +6,9 @@ from typing import List
 import os
 
 from .config import Config
-from .insertion_service import InsertionService
-from .chat_service import ChatService
-from .search_service import SearchService
+from .services.insertion_service import InsertionService
+from .services.chat_service import ChatService
+from .services.search_service import SearchService
 from .models import ChatRequest, ConfigModel
 
 app = FastAPI()

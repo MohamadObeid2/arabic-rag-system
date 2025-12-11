@@ -6,9 +6,9 @@ pymilvus
 transformers
 sentence-transformers
 accelerate
-huggingface-hub>=0.23.0
+huggingface-hub
 qwen-tokenizer
-python-dotenv==1.0.0
+python-dotenv
 marshmallow==3.20.1
 grpcio>=1.59.0
 numpy==1.26.4
@@ -17,6 +17,9 @@ pydantic>=2.7.4,<3.0.0
 tenacity>=8.1.0,<9.0.0
 ollama
 torch
+vllm
 langchain==1.0
 langchain_text_splitters
 langchain_community
+langchain-huggingface
+langchain-milvus

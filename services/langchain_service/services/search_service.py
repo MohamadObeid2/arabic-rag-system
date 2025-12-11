@@ -1,4 +1,5 @@
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_milvus import Milvus
 from pymilvus import connections
 import torch
 
@@ -17,7 +18,6 @@ class SearchService:
         self.init_vector_store()
 
     def init_vector_store(self):
-        from langchain_community.vectorstores import Milvus
         self.vector_store = Milvus(
             embedding_function=self.model,
             collection_name=self.collection_name,

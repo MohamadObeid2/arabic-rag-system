@@ -26,7 +26,7 @@ def download_models():
         )
         model = AutoModelForCausalLM.from_pretrained(
             "Qwen/Qwen2-1.5B",
-            dtype="auto",
+            torch_dtype="auto",
             device_map="auto",
             trust_remote_code=True
         )
